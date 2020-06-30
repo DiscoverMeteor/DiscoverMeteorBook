@@ -1,0 +1,24 @@
+.video-page{
+	.player{
+		margin-bottom:40px;
+		@include medium{
+			@include span(12);
+		}
+	}
+	.infos{
+		h2{
+			margin:0 0 10px 0;
+		}
+		@include medium{
+			@include span(8);
+		}
+	}
+	.resources{
+		h3{
+			margin-top:0;
+		}
+		@include medium{
+			@include span(4 omega);
+		}
+	}
+}

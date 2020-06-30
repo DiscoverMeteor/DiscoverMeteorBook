@@ -1,0 +1,186 @@
+.photo-background, .photo-overlay{
+	position: absolute;
+	top: 0px;
+	bottom: 0px;
+	left: 0px;
+	right: 0px;
+}
+.photo-background{
+	background-size: cover;
+	// background-attachment: fixed;
+	z-index: 1;
+}
+.photo-credit{
+	position: absolute;
+	@include small{
+		display: none;
+	}
+	@include medium{
+		bottom: 10px;
+		right: 10px;
+	}
+	background: black(0.6);
+	padding: 3px 8px;
+	color: white(0.4);
+	font-size: 12px;
+	z-index:100;
+}
+.photo-overlay{
+	background: $darkest-purple;
+	@include animate(opacity);
+	z-index:2;
+	&.overlay-hidden{
+		opacity: 0;
+	}
+}
+.photo-scroll-arrow{
+	content: '';
+	display: block;
+	width: 16px;
+	height: 16px;
+	position: absolute;
+	bottom: 40px;
+	left: 50%;
+	margin-left: -8px;
+	border: 2px solid white(0.35);
+	background: rgba(0,0,0,0);
+	border-left: 0;
+	border-top: 0;
+	outline: 0;
+	transform: rotate(45deg);
+	@include animate();
+	cursor: pointer;
+	z-index: 10;
+	&:hover{
+		border-color: white(0.6);
+	}
+	@include small{
+		display: none;
+	}
+}
+.chapter-photo{
+	// height: 100vh;
+	height: 600px; /* needed for iOS to avoid infinite viewport bug*/
+	// max-height: 100vh;
+	width:100%;
+	display: table;
+	
+	color: white;
+	position: relative;
+	.inner{
+			display: table-cell;
+			vertical-align: middle;
+
+		position: relative;
+		z-index: 10;
+	}
+	ul{
+		padding-left: 0px;
+		margin: 0;
+		list-style-position: inside;
+	}
+
+	.sidebar-marker{
+		background: black(0.6);
+	}
+
+}
+.chapter-hero{
+	border-bottom: 1px solid white(0.4);
+	padding-bottom: 10px;
+	margin-bottom: 15px;
+	position: relative;
+	@include cf;
+	span{
+		color: white;
+	}
+}
+
+.chapter-heading{
+	@include medium{
+		margin-right: 60px;
+	}
+	float: left;
+}
+
+h2.chapter-title{
+	font-weight: light();
+	color: white;
+	margin-bottom: 0;
+	display: inline-block;
+	font-size: 40px;
+	@include small{
+		font-size: 24px;
+	}
+}
+
+// .chapter-nav{
+// 	float: right;
+// 	// inline buttons
+// 	.prev-chapter, .next-chapter{
+// 		position: absolute;
+// 		right: 50px;
+// 		height: 40px;
+// 		width: 40px;
+// 		display:block;
+// 		@include border-radius(100%);
+// 		border:3px solid white;
+// 		z-index:100;
+// 		text-align: center;
+// 		margin-top: -20px;
+// 		line-height: 55px;
+// 		@include animate;
+// 		background:url('/images/left.svg') 46% center no-repeat;
+// 		background-size:24px 24px;
+// 		opacity: 0.3;
+// 		&:hover{
+// 			border-color:white;
+// 			opacity: 1;
+// 		}
+
+// 			top: 50%;		
+		
+// 	}
+// 	.next-chapter{
+// 		right: 0px;
+// 		left: auto;
+// 		background-image:url('/images/right.svg');
+// 		background-position: 54% center;
+// 	}	
+// }
+
+.chapter-nav{
+	// absolutely positioned buttons
+	.prev-chapter, .next-chapter{
+		position: absolute;
+		left: 20px;
+		top: 50%;
+		height: 50px;
+		width: 50px;
+		display:block;
+		border-radius: 100%;
+		border:3px solid white;
+		z-index:100;
+		text-align: center;
+		margin-top: -30px;
+		line-height: 55px;
+		@include animate;
+		background:url('/images/left.svg') 46% center no-repeat;
+		background-size:24px 24px;
+		opacity: 0.3;
+		&:hover{
+			border-color:white;
+			opacity: 1;
+		}
+		@include smallish{
+			bottom: 40px;
+			top: auto;
+		}
+	}
+	.next-chapter{
+		right: 20px;
+		left: auto;
+		background-image:url('/images/right.svg');
+		background-position: 54% center;
+	}
+}

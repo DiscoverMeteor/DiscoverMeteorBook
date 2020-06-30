@@ -1,0 +1,11 @@
+{
+  "devDependencies": {
+    "body-parser": "^1.19.0",
+    "griddle-react": "^0.3.1",
+    "react": "0.14.x",
+    "react-disqus-thread": "0.3.1",
+    "react-dom": "^0.14.7",
+    "react-mounter": "^1.0.0",
+    "underscore": ">= 1.6.x"
+  }
+}

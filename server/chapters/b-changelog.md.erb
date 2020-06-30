@@ -1,0 +1,334 @@
+---
+title: Changelog
+slug: changelog
+date: 0099/01/02
+number: 99
+level: free
+appendix: true
+version: "1.3"
+updated: "May 31, 2016"
+note: feel free to adapt the contents of this document to your own translation, but please keep the same version numbers
+---
+
+### May 31, 2016 <span class="marker version-marker">1.3</span>
+
+- Changed starting file structure for Meteor 1.3 in Getting Started chapter. 
+- Added paragraph about adding Session package in Getting Started chapter.
+- Updated Deploying chapter. 
+- Added note about method security in Creating Posts chapter.
+- Clarified note about allow/deny vs methods in Editing Posts chapter.
+- Also added note about allow/deny vs methods in Allow & Deny sidebar. 
+
+### October 21, 2015 <span class="marker version-marker">1.10</span>
+
+- Updated Sacha & Tom's bios in Introduction chapter. 
+- Updated list of default packages in Getting Started chapter. 
+- Removed the `underscore` package in Getting Started chapter and change commit `2-2`'s commit message.
+- Rewrote the “Note on Packages” note in Getting Started chapter.
+- Added note about getting new hash in Using GitHub chapter.
+- Added note about sidebar code snippets in Publications & Subscriptions chapter. 
+- Added note about adding `check` and `audit-argument-checks` packages in Creating Posts chapter. 
+- Fixed code highlighting in “Adding A Link To The Header” section of Creating Posts chapter. 
+- Added note about not trusting the client with `userId`, `author`, and `submitted` properties in Creating posts chapter. 
+- Replaced `UI.insert` and `UI.render` by `Template.insert` and `Template.render` in Creating a Meteor Package chapter.
+- Replaced `rendered` by `onRendered` in Creating a Meteor Package chapter.
+- Changed `percolatestudio:percolatestudio-migrations` to `percolate:migrations` in Migrations chapter.
+- Fixed code snippets for commit 9-5-1 in Creating a Meteor Package chapter.
+- Fixed code highlighting for commit 13-5 in Voting chapter. 
+- Changed `post` to `postInsert` in Voting chapter. 
+- Added `$in` to “Multiple Collections in a Single Subscription” code snippet in Advanced Publications chapter. 
+- Added link to Meteor forums in Going Further chapter. 
+- Changed `on_use` to `onUse` and `add_files` to `addFiles` in Intercom chapter. 
+
+### April 15, 2015 <span class="marker version-marker">1.9</span>
+
+- Updated Introduction & Getting Started sections for Windows.
+- Changed `rendered` to `onRendered` and `created` to `onCreated`. 
+- Explained package names in Getting Started chapter. 
+- Added note about default Iron Router help page in Routing chapter. 
+- Fixed `audit-argument-checks` link in Creating Posts chapter.
+- Fixed file paths in Comments chapter.
+- Wrong `limit()` changed to `postsLimit()` in Pagination chapter. 
+- Changed `UI.registerHelper` to `Template.registerHelper` in Voting chapter.
+- Added a note about `.animate` CSS class in Animations chapter. 
+- Fixed file paths in Animations chapter. 
+
+### February 10, 2015 <span class="marker version-marker">1.8</span>
+
+- Rewrote animation chapter to use `_uihooks`.
+- Wrapped every page in a `.page` div.
+- Used the official `twbs:bootstrap` Bootstrap package.
+- Added `.page` CSS to `style.css`.
+- Used `Template.registerHelper` instead of `UI.registerHelper`.
+- Removed Deploying On Modulus section (now referencing their docs instead).
+- Updated `db.users.find()` result in “Adding Users” chapter.
+- Added a note about the Meteor shell in the “Collections” chapter.
+
+### December 5, 2014 <span class="marker version-marker">1.7.2</span>
+
+- Adding paragraph about `subscriptions` in Pagination chapter. 
+- Various typo fixes.
+- Various code fixes. 
+
+### November 10, 2014 <span class="marker version-marker">1.7.1</span>
+
+Various fixes. 
+
+- Fix code highlighting in Voting chapter.
+- Change “router” to “route” in Pagination chapter.
+- Removed mentions of `Router.map()` in Comments and Pagination chapters.
+- Linking to Boostrap site in Adding Users chapter. 
+- Added BulletProof Meteor to Going Further chapter.
+
+### October 28, 2014 <span class="marker version-marker">1.7</span>
+
+Updating the book for Iron Router 1.0.
+
+- Defining routes with new path-first syntax.
+- Use `subscriptions` instead of `onBeforeAction` in posts controller.
+- Use `this.next()` in `onBeforeAction` hook.
+- Rename `XyzPostsListController` to `XyzPostsController`.
+
+### October 24, 2014 <span class="marker version-marker">1.6.1</span>
+
+- Fixing a few typos.
+- Finishing switching `Meteor.Collection` to `Mongo.Collection`.
+- Updated introduction.
+- Added “Get A Load Of This” section in Routing chapter.
+
+### October 15, 2014 <span class="marker version-marker">1.6</span>
+
+Updating the book for Meteor 1.0.
+
+#### General Changes
+
+- `collections` directory is now in `lib`.
+- `views` directory is now named `templates`.
+- Removed `$` from bash prompts.
+- Now using Bootstrap 3.
+- Being more consistent about using `//...` to denote skipped lines in code.
+
+#### Getting Started
+
+- Explained the advantages of Meteor packages over manually adding files.
+- Explicitly adding `underscore` package.
+- Updated “5 Types of Packages” section.
+- Not creating `collections` directory anymore.
+- Updated CSS code.
+
+#### Templates
+
+- Changed “partials” to “inclusions”.
+- Not talking about “managers” anymore. 
+
+#### Collections
+
+- Cut down Collections chapter intro. 
+- Changed `Meteor.Collection()` to `Mongo.Collection()`.
+- Added “Storing Data” section.
+- General edits and tweaks.
+
+#### Routing
+
+- Added “Post Not Found” section.
+- General edits and improvements.
+
+#### The Session
+
+- Added reminder to revert code changes at the end of the chapter. 
+
+#### Adding Users
+
+- Now using `ian:accounts-ui-bootstrap-3` package.
+
+#### Reactivity
+
+- Using `Trackers` instead of `Deps`. 
+
+#### Creating Posts
+
+- Removed `message` field from posts.
+- Added “Security Check” section.
+- Added “Preventing Duplicates” section.
+- Changed `post` to `postInsert`, updated `postInsert` method description.
+
+#### Latency Compensation
+
+- Updated code examples.
+- Added more explanations.
+
+#### Allow & Deny
+
+- Remove “Using Deny as a Callback” section.
+
+#### Errors
+
+- Completely rewrote error handling code.
+- Added “Seeking Validation” section.
+
+#### Creating a Meteor Package
+
+- Various edits and updates.
+
+#### Comments
+
+- Rename `comment` template to `commentItem`. 
+- Various edits. 
+
+#### Notifications
+
+- Added “No Trespassers Allowed” note.
+
+#### Advanced Reactivity
+
+- Added section about `reactive-var` package.
+
+#### Pagination
+
+- Got rid of `iron-router-progress`.
+
+#### Voting
+
+- Various edits. 
+
+#### Advanced Publications
+
+- Various edits. 
+
+#### Animations
+
+**This chapter is out of date. Update coming sometimes after 1.0.**
+
+---
+
+*Note: the following extra chapters are only included in the Full and Premium editions:*
+
+#### RSS Feeds & APIs
+
+- Updated package syntax.
+- Minor tweaks.
+
+#### Using External APIs
+
+- Minor edits.
+
+#### Implementing Intercom
+
+- Added `favorite_color` custom attribute.
+- Various minor edits. 
+
+#### Migrations
+
+- Minor edits.
+
+### October 3, 2014 <span class="marker version-marker">1.5.1</span>
+
+- Fix quotes in comments chapter.
+- Clarified Session chapter.
+- Added link to the blog in chapter 8. 
+- Adding a note about reversing changes at the end of Session sidebar. 
+- Reworking section about the five types of packages.
+- Changing "partial" to "inclusion" in Templates chapter. 
+- Added note about Animations chapter being out of date. 
+
+### August 27, 2014 <span class="marker version-marker">1.5</span>
+
+- Updated Pagination chapter.
+- Fixed typos.
+- Removed mentions of Meteorite throughout the book.
+- Updated Creating A Package sidebar for Meteor 0.9.0. 
+- Now including changelog in book repo.
+- Book version is now tracked in changelog, not in intro chapter.
+- Added section about manual.meteor.com in Going Further chapter. 
+
+### May 30, 2014 <span class="marker version-marker">1.3.4</span>
+
+- Replaced Vocabulary chapter with [Going Further](/chapter/going-further) chapter.
+- Added new Vocabulary sidebar. 
+
+### May 20, 2014 <span class="marker version-marker">1.3.3</span>
+
+- Various typos and highlighting fixes. 
+- Small correction in [Errors](/chapter/errors) chapter.
+
+### May 5, 2014 <span class="marker version-marker">1.3.2</span>
+
+Various typos fixes. 
+
+### April 8, 2014 <span class="marker version-marker">1.3.1</span>
+
+Finished 0.8.0 Update.
+
+- [12 – Pagination](/chapter/pagination): Use `count()` instead of `fetch().length()`.
+- [14 – Animations](/chapter/animations): Rewrote the chapter to use a helper instead of the `rendered` callback.
+
+### March 31, 2014 <span class="marker version-marker">1.3</span>
+
+Updated to support Meteor 0.8.0 and Blaze.
+
+- [5 – Routing](/chapter/routing): Routing changes to support IR 0.7.0:
+  - `{{yield}}` becomes `{{> yield}}`
+  - Explicitly add `loading` hook.
+  - Use `onBeforeAction` rather than `before`.
+- [6 – Adding Users](/chapter/adding-users): Minor change for Blaze:
+  - `{{loginButtons}}` becomes `{{> loginButtons}}`
+- [7 – Creating Posts](/chapter/creating-posts): 
+  - HTML changes for stricter parser.
+  - Update our `onBeforeAction` hook to use `pause()` rather than `this.stop()`
+- [13 – Voting](/chapter/voting): Small change to the `activeRouteClass` helper.
+
+### January 13, 2014 <span class="marker version-marker">1.2</span>
+
+The first update of 2014 is a big one! First of all, you'll notice a beautiful, photo-based layout that makes each chapter stand out more and introduces a bit of variety in the book. 
+
+And on the content side, we've updated parts of the book and even written two whole new chapters:
+
+#### New Chapters
+
+- **[NEW!]** [3.5 – Using GitHub](/chapter/github): New sidebar on how to use GitHub. 
+- **[NEW!]** [17.5 – Migrations](/chapter/migrations):  New sidebar about database migrations. 
+
+#### Updates
+
+- [2.5 – Deploying](/chapter/deploying): Rewrote chapter from scratch to be more up to date. 
+- [4.5 – Publications and Subscriptions](/chapter/publications-and-subscriptions): Merged in content from [Understanding Meteor Publications & Subscriptions](https://www.discovermeteor.com/2014/01/02/understanding-meteor-publications-and-subscriptions/)
+- [15 – RSS Feeds & APIs](/chapter/rss-api): Updated chapter to use Iron Router. 
+- [16 – Using External APIs](/chapter/external-api): Updated chapter to use Iron Router.
+- [17 – Implementing Intercom](/chapter/intercom): Rewrote chapter to match the [Intercom package](https://github.com/percolatestudio/meteor-intercom). 
+
+### December 1, 2013 <span class="marker version-marker">1.1</span>
+
+#### Major Updates
+
+- [5 – Routing](/chapter/routing): Rewrote chapter from scratch to use [Iron Router](https://github.com/EventedMind/iron-router).
+- [5.5 – The Session](/chapter/the-session): Added a section about Autorun. 
+- [10 – Comments](/chapter/comments): Updated chapter to use IR. 
+- [12 – Pagination](/chapter/pagination): Rewrote chapter from scratch, now managing pagination with IR.
+- [13 – Voting](/chapter/voting): Updated the chapter to use IR, simplifed the template structure. 
+
+#### Minor Updates
+
+Minor updates include API changes between the old Router and Iron Router, file paths updates, and small rewordings. 
+
+- [6 – Adding Users](/chapter/adding-users)
+- [7 – Creating Posts](/chapter/creating-posts)
+- [7.5 – Latency Compensation](/chapter/latency-compensation)
+- [8 – Editing Posts](/chapter/editing-posts)
+- [9 – Errors](/chapter/errors)
+- [11 – Notifications](/chapter/notifications)
+- [12 – Animations](/chapter/animations)
+
+If you'd like to confirm what exactly has changed, we've created a [full diff of our Markdown source files [PDF]](http://f.cl.ly/items/3C2j0z2U2q083y0A0G3O/iron-router-update-diff.pdf). 
+
+### October 4, 2013 <span class="marker version-marker">1.02</span>
+
+- Various typo fixes
+
+### September 4, 2013 <span class="marker version-marker">1.01</span>
+
+- Updated "Creating a Meteorite Package" chapter to Meteor 0.6.5
+- Updated package syntax in Intercom and API extra chapters.
+
+### May 5, 2013 <span class="marker version-marker">1.0</span>
+
+First version.

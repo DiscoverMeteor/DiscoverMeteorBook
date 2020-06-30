@@ -1,0 +1,187 @@
+---
+title: Latency Compensation
+slug: latency-compensation
+date: 0007/01/02
+number: 7.5
+level: starter
+sidebar: true
+photoUrl: http://www.flickr.com/photos/ikewinski/9473352049/
+photoAuthor: Mike Lewinski
+contents: Understand latency compensation.|Slow your app down and see what's going on.|Learn how Meteor Methods call each other.
+paragraphs: 28
+---
+
+In the last chapter, we introduced a new concept in the Meteor world: **Methods**. 
+
+<%= diagram "latency1", "Without latency compensation", "pull-right" %>
+
+A Meteor Method is a way of executing a series of commands on the server in a structured way. In our example, we used a Method because we wanted to make sure that new posts were tagged with their author's name and id as well as the current server time. 
+
+However, if Meteor executed Methods in the most basic way, we'd have a problem. Consider the following sequence of events (note: the timestamps are random values picked for illustrative purpose only):
+
+- *+0ms:* The user clicks a submit button and the browser fires a Method call.
+- *+200ms:* The server makes changes to the Mongo database.
+- *+500ms:* The client receives these changes, and updates the UI to reflect them.
+
+If this were the way Meteor operated, then there'd be a short lag between performing such actions and seeing the results (that lag being more or less noticeable depending on how close you were to the server). We can't have that in a modern web application!
+
+### Latency Compensation
+
+<%= diagram "latency2", "With latency compensation", "pull-right" %>
+
+To avoid this problem, Meteor introduces a concept called **Latency Compensation**. When we defined our `post` Method, we placed it within a file in the `collections/` directory. This means it is available to both the server *and the client* -- and it will run on both at the same time!
+
+When you make a Method call, the client sends off the call to the server, but also simultaneously *simulates* the action of the Method on its client collections. So our workflow now becomes:
+
+- *+0ms:* The user clicks a submit button and the browser fires a Method call.
+- *+0ms:*  The client simulates the action of the Method call on the client collections and changes the UI to reflect this
+- *+200ms:*  The server makes changes to the Mongo database.
+- *+500ms:*  The client receives those changes and undoes its simulated changes, replacing them with the server's changes (which are generally the same). The UI changes to reflect this.
+
+This results in the user seeing the changes instantly. When the server's response returns a few moments later, there may or may not be noticeable changes as the server's canonical documents come down the wire. One thing to learn from this is that we should try to make sure we simulate the real documents as closely as we can.
+
+### Observing Latency Compensation
+
+We can make a little change to the `post` method call to see this in action. To do so, we'll use the handy `Meteor._sleepForMs()` function to delay the method call by five seconds, but (crucially) *only on the server*.
+
+We'll use `isServer` to ask Meteor if the Method is currently being invoked on the client (as a “stub”) or on the server. A [stub](http://docs.meteor.com/#methods_header) is the Method simulation that Meteor runs on the client in parallel, while the "real" Method is being run on the server.
+
+So we'll ask Meteor if the code is being executed on the server. If so, we'll delay things by five seconds and add the string `(server)` at the end of our post's title. If not, we'll add the string `(client)`:
+
+~~~js
+Posts = new Mongo.Collection('posts');
+
+Meteor.methods({
+  postInsert: function(postAttributes) {
+    check(this.userId, String);
+    check(postAttributes, {
+      title: String,
+      url: String
+    });
+
+    if (Meteor.isServer) {
+      postAttributes.title += "(server)";
+      // wait for 5 seconds
+      Meteor._sleepForMs(5000);
+    } else {
+      postAttributes.title += "(client)";
+    }
+
+    var postWithSameLink = Posts.findOne({url: postAttributes.url});
+    if (postWithSameLink) {
+      return {
+        postExists: true,
+        _id: postWithSameLink._id
+      }
+    }
+    
+    var user = Meteor.user();
+    var post = _.extend(postAttributes, {
+      userId: user._id, 
+      author: user.username, 
+      submitted: new Date()
+    });
+    
+    var postId = Posts.insert(post);
+    
+    return {
+      _id: postId
+    };
+  }
+});
+~~~
+<%= caption "collections/posts.js" %>
+<%= highlight "11~17" %>
+
+If we were to stop here, the demonstration wouldn't be very conclusive. At this point, it just looks like the post submit form is pausing for five seconds before redirecting you to the main post list, and not much else is happening. 
+
+To understand why, let's go back to the post submit event handler:
+
+~~~js
+Template.postSubmit.events({
+  'submit form': function(e) {
+    e.preventDefault();
+    
+    var post = {
+      url: $(e.target).find('[name=url]').val(),
+      title: $(e.target).find('[name=title]').val()
+    };
+    
+    Meteor.call('postInsert', post, function(error, result) {
+      // display the error to the user and abort
+      if (error)
+        return alert(error.reason);
+      
+      // show this result but route anyway
+      if (result.postExists)
+        alert('This link has already been posted');
+    
+      Router.go('postPage', {_id: result._id});  
+    });
+  }
+});
+~~~
+<%= caption "client/templates/posts/post_submit.js" %>
+
+We've placed our `Router.go()` routing call inside the method call's callback. Which means the form is waiting for that method to succeed before redirecting.
+
+Now this would usually be the right course of action. After all, you can't redirect the user before you know if their post submission was valid or not, if only because it would be extremely confusing to be redirected once, and then be redirected again back to the original post submission page to correct your data all within a few seconds. 
+
+But for this example's sake, we want to see the results of our actions immediately. So we'll change the routing call to redirect to the `postsList` route (we can't route to the post because we don't know its `_id` outside the method), take it out from the callback, and see what happens:
+
+~~~js
+Template.postSubmit.events({
+  'submit form': function(e) {
+    e.preventDefault();
+    
+    var post = {
+      url: $(e.target).find('[name=url]').val(),
+      title: $(e.target).find('[name=title]').val()
+    };
+    
+    Meteor.call('postInsert', post, function(error, result) {
+      // display the error to the user and abort
+      if (error)
+        return alert(error.reason);
+      
+      // show this result but route anyway
+      if (result.postExists)
+        alert('This link has already been posted');
+    });
+
+    Router.go('postsList');  
+
+  }
+});
+~~~
+<%= caption "client/templates/posts/post_submit.js" %>
+<%= highlight "20" %>
+
+<%= scommit "7-5-1", "Demonstrate the order that posts appear using a sleep." %>
+
+If we create a post now, we see latency compensation clearly. First, a post is inserted with `(client)` in the title (the first post in the list, linking to GitHub):
+
+<%= screenshot "s5-1", "Our post as first stored in the client collection" %>
+
+Then, five seconds later, it is cleanly replaced with the real document that was inserted by the server:
+
+<%= screenshot "s5-2", "Our post once the client receives the update from the server collection" %>
+
+### Client Collection Methods
+
+You might think that Methods are complicated after this, but in fact they can be quite simple. We've actually seen three very simple Methods already: the collection mutation Methods, `insert`, `update` and `remove`.
+
+When you define a server collection called `'posts'`, you are implicitly defining three Methods: `posts/insert`, `posts/update` and `posts/delete`. In other words, when you call `Posts.insert()` on your client collection, you are calling a latency compensated Method that does two things: 
+
+1. Checks to see if we can make the mutation by calling `allow` and `deny` callbacks (this doesn't need to happen in the simulation however).
+2. Actually makes the modification to the underlying data store.
+  
+### Methods Calling Methods
+
+If you are keeping up, you might have just realized that our `post` Method is calling another Method (`posts/insert`) when we insert our post. How does this work?
+ 
+When the simulation (client-side version of the Method) is being run, we run `insert`'s simulation (so we insert into our client collection), but we *do not* call the real, server-side `insert`, as we expect that the *server-side* version of `post` will do this.
+
+Consequently, when the server-side `post` Method calls `insert` there's no need to worry about simulation, and the insertion goes ahead smoothly.
+
+As before, don't forget to revert your changes before moving on to the next chapter.

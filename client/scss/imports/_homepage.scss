@@ -1,0 +1,31 @@
+.chapter-unavailable{
+  a{
+    color: $light-text;
+    font-weight: normal;
+  }
+}
+.newsletter{
+  p{
+    margin-bottom: 10px;
+  }
+  .text{
+    border: 1px solid $medium-bg;
+  }
+  .control-group{
+    margin-bottom: 5px;
+  }
+  .button{
+    width: 100%;
+  }
+}
+.home-sidebar{
+  p{
+    font-size: 16px;
+  }
+}
+.sidebar-block{
+  margin-bottom: 40px;
+  &.note{
+    padding: 20px;
+  }
+}

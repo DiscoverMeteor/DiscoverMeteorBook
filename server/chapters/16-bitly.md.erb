@@ -1,0 +1,471 @@
+---
+title: Using External APIs
+slug: external-api
+date: 0016/01/01
+number: 16
+extra: true
+level: full
+published: true
+photoUrl: http://www.flickr.com/photos/ikewinski/9632638608/
+photoAuthor: Mike Lewinski
+contents: Use Bitly to shorten links.|Use the Bitly API to retrieve popularity data.|Use that data to rank links by most clicked.
+note: NOT INCLUDED IN FREE/TRANSLATED VERSIONS
+---
+
+In the last chapter we've seen how to communicate with the outside world, but so far all communications have been one-way: from our app to third-party services.
+
+In this chapter, we'll explore how to not only *send* data to external services, but also *receive* data from them and make this data reactive in order to use it in our app.
+
+### Popularity Contest
+
+Microscope lets users vote on links, and then uses those votes to determine popularity rankings. That's a great way to do internal rankings, but wouldn't it be great to also have data on what happens to those links *outside* of the app?
+
+This is where [Bitly](http://bitly.com) comes in. By making use of this link shortening service's API, we'll be able to shorten all links posted to Microscope, then retrieve stats such as the number of clicks or shares. This will then give us additional metrics that will help fine-tune our ratings.
+
+### Obtaining An OAuth Token
+
+The first step is to create a [Bitly](http://bitly.com) account so you can get an API token. Once your account is created, you'll need to verify your email (if you haven't received an email verification email yet, go to the [Bitly settings page](https://bitly.com/a/settings) to request one). Do this, then head on to the [Manage OAuth Apps](https://bitly.com/a/oauth_apps) page to register a new OAuth token.
+
+(Or optionally, you can also use the one we registered while writing this chapter: `a5bd3da617a664779650ee8bfcf16f747c8d361a`)
+
+<%= screenshot "17-1", "Getting a Bitly access token" %>
+
+With this token, you will now be able to authenticate with the Bitly API and do all kinds of nifty stuff. For starters, let's shorten our links.
+
+### A Few Packages
+
+We'll be making http calls, so we'll go ahead and add the `http` package:
+
+~~~bash
+meteor add http
+~~~
+
+While we're at it, we'll also create a `bitly` directory inside `packages`, and initialize our new Bitly package with a `package.js` file. All our Bitly-related functions will run on the server, so we don't need to add the package client-side.
+
+~~~js
+Package.describe({
+  name: 'bitly',
+  summary: "Bitly package",
+  version: '1.0.0'
+});
+
+Package.onUse(function (api) {
+  api.versionsFrom('0.9.4');
+  api.addFiles('bitly.js', 'server');
+  api.export('Bitly');
+});
+~~~
+<%= caption "packages/bitly/package.js" %>
+
+Next, we'll create an empty `bitly.js` file inside the Bitly package that will eventually hold all of our link-shortening logic. Once that's done, don't forget to add the new package to your app:
+
+~~~bash
+meteor add bitly
+~~~
+
+<%= commit "16-1", "Added http package and created Bitly package." %>
+
+### Shortening URLs
+
+We'll be needing a Bitly token to access the Bitly API. We *could* just include that token in our app's code, but that wouldn't be a great idea: for example, what if we're building an open-source app that could also be used by other people?
+
+Instead, we'll use [Meteor.settings](http://docs.meteor.com/#meteor_settings), a global object that takes its value either from a file or from an envirnoment variable.
+
+First, let's create a new `settings.json` file at the root of our project:
+
+~~~js
+{
+  "bitly": "a5bd3da617a664779650ee8bfcf16f747c8d361a"
+}
+~~~
+<%= caption "settings.json" %>
+
+We *don't* want settings to be part of our codebase, so we'll create a `.gitignore` file and add `settings.json` to it:
+
+~~~
+settings.json
+~~~
+<%= caption ".gitignore" %>
+
+All that's left is to tell Meteor to load that settings file. We can do this by using the `--settings` flag when we run our app. Let's give it a try. First, bring up your terminal window and stop your Meteor app's process with `ctrl+c`.
+
+Then restart it with:
+
+~~~bash
+meteor --settings settings.json
+~~~
+
+<% note do %>
+
+### Adding An Alias
+
+(Note: the following instructions are valid for Mac OS and Linux only)
+
+Typing `meteor --settings settings.json` every single time instead of just `meteor` might get a little tiring. So if you want, you can create an alias for this command.
+
+The following steps will strongly depend on your environment and configuration, but assuming you're running Mac OS, you'll have to edit the `.bash_profile` file that lives in your local user directory:
+
+~~~bash
+open -a TextEdit .bash_profile
+~~~
+
+(If for whatever reason `.bash_profile` doesn't exist yet, just run `touch ~/.bash_profile` first.)
+
+Then, simply add this line at the end of the file:
+
+~~~bash
+alias meteorset='meteor --settings settings.json'
+~~~
+
+After saving and reloading your terminal window, you should now be able to run all your Meteor apps with the `meteorset` command, and have your `settings.json` file automatically included to boot!
+
+<% end %>
+
+We're now ready to code our link shortening function. This function will use the [Meteor.http.get()](http://docs.meteor.com/#http) method to make an outbound GET call to the [Bitly API](http://dev.bitly.com/api.html), and – if the query is successful – return a shortened URL:
+
+~~~js
+Bitly = {};
+
+Bitly.shortenURL = function(url){
+  if(!Meteor.settings.bitly)
+    throw new Meteor.Error(500, 'Please provide a Bitly token in Meteor.settings');
+
+  var shortenResponse = Meteor.http.get(
+    "https://api-ssl.bitly.com/v3/shorten?",
+    {
+      timeout: 5000,
+      params:{
+        "format": "json",
+        "access_token": Meteor.settings.bitly,
+        "longUrl": url
+      }
+    }
+  );
+  if(shortenResponse.statusCode === 200){
+    return shortenResponse.data.data.url
+  }else{
+    throw new Meteor.Error(500, "Bitly call failed with error: "+shortenResponse.status_txt);
+  }
+}
+~~~
+<%= caption "packages/bitly/bitly.js" %>
+
+We can then call our function from the `post` Meteor method that gets called every time somebody submits a new link:
+
+~~~js
+//...
+
+var user = Meteor.user();
+var post = _.extend(postAttributes, {
+  userId: user._id, 
+  author: user.username, 
+  submitted: new Date(),
+  commentsCount: 0,
+  upvoters: [], 
+  votes: 0
+});    
+
+// shorten link URL
+if(Meteor.isServer){
+  var shortUrl = Bitly.shortenURL(post.url);
+  if(post.url && shortUrl)
+    post.shortUrl = shortUrl;
+}
+
+var postId = Posts.insert(post);
+
+return {
+  _id: postId
+};
+
+//...
+~~~
+<%= caption "collections/posts.js" %>
+<%= highlight "13~18" %>
+
+Remember that because of latency compensation, a Meteor method can be executed in two different environments: once on the server, and once (as a "stub") on the client. In this case, we only want to do the shortening server-side, so we make sure to test for the `isServer` boolean first.
+
+And since we're on the server, we're able to run the call synchronously (i.e. without a callback). This greatly simplifies our code, letting us treat the outbound `GET` call just as any other function.
+
+<%= commit "16-2", "Shortening URLs on post submit." %>
+
+Let's try out our new link shortening feature. Submit a new post, then open up the browser console and inspect the recently created post object (typing `Posts.findOne('insert_your_post_id_here')`). You should now see a `shortUrl` property that has been automagically filled in with a Bitly URL!
+
+What's more, you can also open up your [Bitly dashboard](https://bitly.com/) and you should see your brand new link in the list (don't worry about that Pufferfish link, it's just Bitly's way of saying welcome!).
+
+<%= screenshot "17-2", "The Bitly dashboard" %>
+
+In a perfect world, we'd also run the link shortening function when editing a post, in case the post URL has changed. For this chapter we don't want to get bogged down with implementation details, but this could be a nice exercise if you'd like to explore the topic further.
+
+### Displaying Shortened Links
+
+With our shortened URLs working, we can now display shortened links instead of the normal ones. Since we're shortening URLs at the time of posting, previously existing links will obviously not have short URLs. We'll take care of this with a simple `postUrl` helper:
+
+~~~html
+<template name="postItem">
+  <div class="post">
+    <a href="#" class="upvote btn btn-default {{upvotedClass}}">⬆</a>
+    <div class="post-content">
+      <h3><a href="{{postUrl}}">{{title}}</a><span>{{domain}}</span></h3>
+      <p>
+        {{pluralize votes "Vote"}},
+        submitted by {{author}},
+        <a href="{{pathFor 'postPage'}}">{{pluralize commentsCount "comment"}}</a>
+        {{#if ownPost}}<a href="{{pathFor 'postEdit'}}">Edit</a>{{/if}}
+      </p>
+    </div>
+    <a href="{{pathFor 'postPage'}}" class="discuss btn btn-default">Discuss</a>
+  </div>
+</template>
+~~~
+<%= caption "client/templates/posts/post_item.html" %>
+<%= highlight "5" %>
+
+~~~js
+Template.postItem.helpers({
+  ownPost: function() {
+    return this.userId === Meteor.userId();
+  },
+  domain: function() {
+    var a = document.createElement('a');
+    a.href = this.url;
+    return a.hostname;
+  },
+  upvotedClass: function() {
+    var userId = Meteor.userId();
+    if (userId && !_.include(this.upvoters, userId)) {
+      return 'btn-primary upvotable';
+    } else {
+      return 'disabled';
+    }
+  },
+  postUrl: function(){
+    return this.shortUrl ? this.shortUrl : this.url;
+  }
+});
+//...
+~~~
+<%= caption "client/templates/posts/post_item.js" %>
+<%= highlight "18~20" %>
+
+As an added bonus, using a fallback helper also gives us something to display for those few instants when we're waiting to get the shortened URL back from Bitly.
+
+<%= commit "16-3", "Displaying shortened links." %>
+
+<% note do %>
+
+### Migrations
+
+Another way to deal with the problem of older links not having short URLs would be setting up a migration to add them to all existing posts in our database.
+
+Meteor doesn't provide any core support for migrations but that doesn't mean we can't build our own, as you'll see in an upcoming chapter.
+
+<% end %>
+
+### Retrieving Bitly Stats
+
+Now that we're shortening our links, let's assume people are clicking and sharing away. It's now time to retrieve our stats, and the first part of that process is setting up a method to query the Bitly API.
+
+Let's create a new `getBitlyClicks` method inside our Bitly package that will ping the Bitly API for a given link and returns the total number of clicks on it.
+
+Since our `getBitlyClicks` method will only be accessible from the server, we'll also wrap it in a Meteor method of the same name just so we can test it from the browser console:
+
+~~~js
+//...
+
+Bitly.getClicks = function(link){
+  if(!Meteor.settings.bitly)
+    throw new Meteor.Error(500, 'Please provide a Bitly token in Meteor.settings');
+
+  var statsResponse = Meteor.http.get(
+    "https://api-ssl.bitly.com/v3/link/clicks?",
+    {
+      timeout: 5000,
+      params:{
+        "format": "json",
+        "access_token": Meteor.settings.bitly,
+        "link": link
+      }
+    }
+  );
+  if(statsResponse.data.status_code === 200)
+    return statsResponse.data.data.link_clicks
+}
+
+Meteor.methods({
+  'getBitlyClicks': function(link){
+    return Bitly.getClicks(link);
+  }
+});
+~~~
+<%= caption "packages/bitly/bitly.js" %>
+
+<%= commit "16-4", "Added getClicks method." %>
+
+To make sure everything is working, open up your browser console and type:
+
+~~~js
+> Meteor.call('getBitlyClicks', 'http://bit.ly/15vghAk', function(error, result){console.log(result)})
+~~~
+<%= caption "The browser console" %>
+
+Of course, feel free to replace that shortened link with one of your own. If everything is working, you should first get a return value of `undefined`, then once the callback kicks in, see the number of clicks logged by Bitly on that link.
+
+### Distributing API Calls
+
+As we've seen multiple times over the course of this book, one of the strong points of Meteor is that any data change is reflected client-side almost immediately. While we won't be able to achieve the same result with the Bitly API, we'll simulate live updates by pinging the API every `n` seconds.
+
+<% note do %>
+
+### Regular Reactivity
+
+In [the Advanced Reactivity sidebar](/chapter/advanced-reactivity/), we saw how to take a non-reactive data source and make it reactive.
+
+In this chapter, we'll bypass that pattern by simply writing the return value of our API calls to the database, and letting Meteor's regular reactivity do its job.
+
+That being said, the Advanced Reactivity technique is still useful for cases when you can't – or don't want to – write to the database (for example, for temporary or user-specific data).
+
+<% end %>
+
+It's important to remember that we'll be making API calls for every single one of our shortened links. To mitigate the load on the Bitly API, we'll stagger our calls so they don't go out all at once.
+
+To achieve this, we'll use the `Meteor.setInterval` and `Meteor.setTimeout` methods. First, `setInterval` will be used to trigger a batch of API calls every `n` seconds (assuming you don't have more than a hundred posts, setting `n` to 10 seconds should be fine).
+
+Then, we'll use `setTimeout` to delay each call incrementally. To make things a bit more concrete, let's assume we have 5 posts, and we want to update our `clicks` property every 10 seconds.
+
+The first post will be updated at a time `t`, the second one at `t+2s`, then `t+4s`, `t+6s`, and finally `t+8s`, after which the next interval will kick in and post number one will be updated again.
+
+Here's what the code for all this looks like:
+
+~~~js
+//...
+
+var callInterval = 10000; // 1000ms * 10 = 10s
+
+Meteor.setInterval(function(){
+  // get all posts with the shortUrl property
+  var shortUrlPosts = Posts.find({shortUrl: { $exists: true }});
+  var postsNumber = shortUrlPosts.count();
+
+  // initialize counter
+  var count = 0;
+
+  shortUrlPosts.forEach(function(post){
+    // calculate the right delay to distribute API calls evenly throughout the interval
+    var callTimeout = Math.round(callInterval/postsNumber*count);
+
+    Meteor.setTimeout(function(){
+      Posts.update(post._id, {$set: {clicks: Bitly.getClicks(post.shortUrl)}});
+    }, callTimeout);
+
+    count++;
+  });
+
+}, callInterval);
+~~~
+<%= caption "packages/bitly/bitly.js" %>
+<%= highlight "3~24" %>
+
+With this method, `clicks` becomes a property of the post document and is stored in the database just like `title` or `submitted`. The only difference is that `clicks` will automatically be updated at regular intervals.
+
+And to make sure everything is working properly, we'll also display a click counter on each of our posts:
+
+~~~html
+<template name="postItem">
+  <div class="post">
+    <a href="#" class="upvote btn btn-default {{upvotedClass}}">⬆</a>
+    <div class="post-content">
+      <h3><a href="{{postUrl}}">{{title}}</a><span>{{domain}}</span></h3>
+      <p>
+        {{pluralize votes "Vote"}},
+        submitted by {{author}},
+        {{#if clicks}}{{pluralize clicks "click"}},{{/if}}
+        <a href="{{pathFor 'postPage'}}">{{pluralize commentsCount "comment"}}</a>
+        {{#if ownPost}}<a href="{{pathFor 'postEdit'}}">Edit</a>{{/if}}
+      </p>
+    </div>
+    <a href="{{pathFor 'postPage'}}" class="discuss btn btn-default">Discuss</a>
+  </div>
+</template>
+~~~
+<%= caption "client/templates/posts/post_item.html" %>
+<%= highlight "9" %>
+
+<%= commit "16-5", "Distributing Bitly API calls." %>
+
+### Most Clicked
+
+Finally, we'll put our new property to good use by creating a new "most clicked" view to go along with "new" and "best". All we need to do is a bit of copy/pasting to adapt our existing posts lists views.
+
+First, we'll create a `ClickedPostsListController` controller that sorts posts by `clicks`, then breaks ties by `submitted` and `_id`:
+
+~~~js
+//...
+
+BestPostsListController = PostsListController.extend({
+  sort: {votes: -1, submitted: -1, _id: -1},
+  nextPath: function() {
+    return Router.routes.bestPosts.path({postsLimit: this.postsLimit() + this.increment})
+  }
+});
+
+ClickedPostsController = PostsListController.extend({
+  sort: {clicks: -1, submitted: -1, _id: -1},
+  nextPath: function() {
+    return Router.routes.clickedPosts.path({postsLimit: this.postsLimit() + this.increment})
+  }
+});
+
+//...
+~~~
+<%= caption "lib/router.js" %>
+<%= highlight "10~15" %>
+
+Then, we'll use that controller to create a new route:
+
+~~~js
+//...
+
+Router.route('/best/:postsLimit?', {name: 'bestPosts'});
+
+Router.route('/clicked/:postsLimit?', {name: 'clickedPosts'});
+
+Router.route('/posts/:_id', {
+
+//...
+~~~
+<%= caption "lib/router.js" %>
+<%= highlight "5" %>
+
+Finally, we'll add a link to our new `bestPosts` route in the header:
+
+~~~js
+//...
+
+<li class="{{activeRouteClass  'bestPosts'}}">
+  <a href="{{pathFor 'bestPosts'}}">Best</a>
+</li>
+<li class="{{activeRouteClass  'clickedPosts'}}">
+  <a href="{{pathFor 'clickedPosts'}}">Most Clicked</a>
+</li>
+{{#if currentUser}}
+  <li class="{{activeRouteClass 'postSubmit'}}">
+    <a href="{{pathFor 'postSubmit'}}">Submit Post</a>
+  </li>
+  <li class="dropdown">
+    {{> notifications}}
+  </li>
+{{/if}}
+
+//...
+~~~
+<%= caption "client/templates/includes/header.html" %>
+<%= highlight "6~8" %>
+
+That's it! Since we did a lot of the heavy lifting in the previous chapters, adding new list views is now pretty easy.
+
+<%= commit "16-6", "Adding Most Clicked view." %>
+
+<%= screenshot "17-3", "The Most Clicked view." %>
+
+Of course, this is not the only way of interacting with third-party APIs. But it should be good enough to get you started, and open the door to all kinds of new possibilities!

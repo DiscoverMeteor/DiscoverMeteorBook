@@ -1,0 +1,291 @@
+---
+title: Avital Oliver
+level: premium
+slug: avital-oliver
+---
+
+## An Interview with Avital Oliver
+
+<% note do %>
+
+[Download MP3 (41 mb, 22 min)](https://s3.amazonaws.com/discovermeteor/interviews/DiscoverMeteor_Avital-Oliver.mp3)
+
+[Download PDF](https://s3.amazonaws.com/discovermeteor/interviews/DiscoverMeteor_Avital-Oliver.pdf)
+
+<% end %>
+
+<%= figure "interviews/avital.jpg", "Avital Oliver", "portrait" %>
+
+**Tom Coleman:** I'm here with Avital Oliver who is one of the Meteor core developers. Thanks so much for joining us, Avi.
+
+**Avital Oliver:** Thank you, it's a pleasure.
+
+### From Mathematics to Asana
+
+**Tom:** To start off, can you tell us a little about yourself, your history, how you ended up at Meteor?
+
+**Avital:** Sure. Earlier in my life, I was actually a mathematician. I thought I'd end up being a math professor. After getting a taste of what academia is like, I decided to go on a different path. Luckily, I had been programming in my spare time previously.
+
+I just spent most of my years working on all sorts of different projects. I never really focused on work too much until I had my first child, at which time I realized I needed to get a real job. No, I had jobs previously, but this was like a very real job.
+
+<%= pullquote "We started by building a framework that was in many ways similar to Meteor." %>
+
+Then I started working for [Asana](http://asana.com), a start-up here in San Francisco. At Asana, we started by building a framework that was with goals, in many ways, similar to Meteor. At Asana, we got a lot of experience with which things worked better, which things worked less good. We were trying to build a framework to run a real time collaborative app.
+
+<%= figure "interviews/asana.jpg", "Asana" %>
+
+Asana is also where I met Geoff Schmidt who is now CEO of Meteor. When I finished my time at Asana, I saw what people that I knew were doing. Jeff was working on this Meteor thing. I was like, "Hey, this is kind of interesting. I think this is going well. I've seen other systems, and I think Meteor is done the right way."
+
+### Employee Number 2
+
+I got really excited, and we talked a few times. Then I ended up doing a small project for a week where I got to know the team. Then I was given an offer. I'm really happy that it worked out that well.
+
+**Tom:** Were you employee number one, number two at Meteor?
+
+**Avital:** Number two. David Greenspan was the first hire.
+
+**Tom:** So close.
+
+**Avital:** [laughs]
+
+**Tom:** Tell us what you've done at Meteor. I feel like you've done the most in some ways in terms of the user facing stuff, but, please, in your own words.
+
+### Making Users Happier
+
+**Avital:** Yeah, I really like the user facing stuff. Not everybody here has the same set of interests. I find that when it's something that I can design as "this is a problem users are hitting and this is how we're going to make them happier," then it really energizes me and motivates me. I'm, indeed, focused on those kinds of things.
+
+<%= pullquote "This is a problem users are hitting, and this is how we're going to make them happier.", "right" %>
+
+Let's not forget that a lot of people here are behind the scenes making Meteor work and making our servers run and our infrastructure. We need to not only look at the people who have user facing work. When I joined, at first, I basically started the [Auth](http://docs.meteor.com/#accounts_api) project.
+
+Some of the thoughts around Auth were shared with me. Then I took it and just ran with it. A lot of other people helped out, but I think most of the work was done by me. That was really, really fun because it was obvious that it was the big thing standing between Meteor and being real.
+
+Everybody knew Meteor was cool, but you can't do anything real with it with no security. That was really, really exciting for me. That was four or five months, tying all the pieces together, getting all the interfaces.
+
+### Smarter Packages
+
+Afterwards, I took a short break and did small tasks to kind of clean up and small improvements. Then I took the packages system. Meteor has these smart packages that have code that runs on client and on server and also your deploy environment. But we had them all in a monolithic structure where packages were inside the code base.
+
+Of course, you know about this. Some of our users built this great tool called Meteorite. They figured out that you can… Meteorite is great, but it worked in a way that you had to intervene inside the checkout code base. It's like we had these packages and people can write their own theoretically, but there's no actual way to get them running inside Meteor.
+
+We planned this long process of how we end up building a proper third party packaging system that's properly integrated into Meteor. The first step towards that was separating the core runtime of Meteor, what we call the tool, from the packages themselves and have a distribution system where you can send out packages separately for versions of tools.
+
+Each app can run on different versions so that people can only upgrade each app at a time out of the whole thing.
+
+### Restructuring 
+
+<%= pullquote "There is this very, very big restructuring of our entire deployment system, release system, package-management system.", "left" %>
+
+There is this very, very big restructuring of our entire deployment system, release system, package-management system. The end result of that had not that many user-facing benefits, but the most important ones were NPM support and being able to pin apps to specific versions of Meteor. Main infrastructure work was set up so that we can then go and build proper third-party packaging into Meteor, which is something that we've not yet started.
+
+That was another big project I did, and also got a lot of help from David Glasser. I guess in the background, Nick is always helping with all these things even though his name is not seen as much, but nothing would happen without Nick.
+
+I guess that ended a month and a half ago. Then I also took some time doing a bunch of small improvements that I've put aside. I keep a list always of things I want to do when I have some time, and then once every few months, I have some time.
+
+Now, recently, we all started focusing on Galaxy. We're trying to create a first version of Galaxy that we can have people use to run their Meteor apps in a way that's production ready, and they can actually trust it. I don't know how that's going to play out yet, we just started, but that's really cool because we have this shared energy we're trying to push forward on this.
+
+### Maximizing Ease of Use
+
+**Tom:** Let's just rewind just a sec here and talk about Auth for a moment, and then we'll end it in Galaxy.
+
+Auth is one of those amazing features that you can just type a single thing into the console and get all this magic in your app. Do you think that kind of ease of development is going to be Meteor's biggest advantage?
+
+**Avital:** I think that's exactly right. Too many people say this, so maybe I should either, but I will anyways. Where people use iOS versus Android, or I guess generally, Apple versus Microsoft, they were both operating systems. They both have multitasking windows, but Apple was created with very, very careful thought onto every single feature, maybe even every single pixel, as to maximize the ease of use for the user. That's the way we think about it.
+
+A lot of features are stuff that we could build in a day if we wanted to, but it would end up being functionally complete, but the interface would not be something that you can understand easily. I'm trying to find the fundamental principle, but sometimes when you use an interface or an Auth, it just makes sense.
+
+### Simpler APIs
+
+It's easy to reason about it. The mains are things we can relate to. You can remember it. It's just simple.
+
+<%= pullquote "It's actually very, very hard to come up with simple APIs.", "left" %>
+
+Most APIs are not simple just because it's actually very, very, very hard to come up with simple APIs. I want to point out that the actual APIs in accounts were almost all planned by Geoff. When I joined, there was already a lot of plans around it, and I was like, "Wow! This is going to be very simple." A lot of that was not my work.
+
+**Tom:** No. I wasn't trying to give you the credit for everything, Avi.
+
+**Avital:** That's exactly right. We spend a very long time thinking about every one of these small details.
+
+**Tom:** Yeah, of course. It's obvious that you've done that. You in the plural sense have done that, and the APIs are really great.
+
+### Improving Auth
+
+It seems though a little bit like Auth, still has a few more pieces to come. For instance, the ability to bind two different accounts for two different services together. The ability to customize the UI a little bit easier. Is there a reason why you didn't keep going on with Auth? Did you just need a break?
+
+**Avital:** Those are two great examples. I'm happy that you chose those, because those are the exact… We still have a project in Asana --we use the Asana internally to manage our tasks-- we still have a project in Asana called Auth. It still has a bunch of tasks. Two of the big ones are precisely what you just said. We had to stop at some point. We thought that we'd stop here, and we thought that the community would have some time to play around with it and try to build some of these things.
+
+So far, I don't know that people have successfully built accounts merging, but I know that people have been trying. Customization of accounts UI is something that at least I know that there is a moderately good blog post that tries to explain how one might do that.
+
+<%= pullquote "We have to prioritize making Auth better versus some of the other higher-level tickets we have to take care of.", "right" %>
+
+It's the kind of thing where at any given point, we have to prioritize making Auth better versus some of the other higher-level tickets we have to take care of. I think the balance ends up being you spent any percent of your time with the high-level tickets, and then 20 percent of your time fixing your small improvements.
+
+It's just a matter of us scoping our work. At the end, we're going to have all of these things, but there's just important things we have to finish first.
+
+**Tom:** Of course. I guess finishing these things up on Auth is fairly far down the list compared to… 
+
+**Avital:** I think it's more like at some point it will be obvious that we need to do it or maybe a community member will step up and say, "I want to do this," and then we'll help that community member make sure that it's done right. Or maybe we'll build an internal app or we'll need this feature and then we'll just build it or something like that.
+
+### The Ubuntu Model
+
+**Tom:** In terms of community members stepping up, and this gets into engine stuff and packaging stuff. I know we've talked about this before. But can you tell us a little bit about what the current thinking is in terms of the way that third party packages may, one day, become integrated in to core?
+
+**Avital:** Sure. The ideas that we… The whole point of the factory system is that we do want to have a vibrant third party package ecosystem. But what we think is detrimental is when the package system is mainly for the benefit of the package developers versus the app developers. Because we think it's more important that when you use a package it works than for the person wanting to write a package to be able to say, "I published 200 packages."
+
+<%= pullquote "The default behavior should be the package that you use have been vetted.", "right" %>
+
+At any given point in the future of Meteor, you will want to allow people to just throw a package somewhere. People will be able to use it. But the default behavior should be the package that you used have been vetted and we've made sure, or the media development group, in general, has made sure that they work with the recent release of media.
+
+If not, then we'll have to reach out to those package Authors saying, "We're about to release a new version of Meteor, your package won't work with it. So you're going to have to upgrade it. We're going to manage it around release cycles." Instead of having dependency between different packages, packages are going to be pinned to specific releases of Meteor.
+
+That every time there's a new release, all the package upgrade at the same time and it's all kind of work together at any given point. Basically, the analogy is just the one, two model of package management where one organization takes on the responsibility, making sure that things integrate well together.
+
+Just like Ubuntu has a large team of people that manage the release process around these packages, we will also have to do the same.
+
+### The Third-Party Package Lifecycle
+
+**Tom:** Will there be a process as well, apart from just pinning a package to a Meteor version of a package, a third party package eventually becoming part of core? Suppose I was to work on a LinkedIn accounts package, for instance, would there be a process where eventually that might become part of Meteor core and, I suppose, blessed and even maintained by the core… ?
+
+**Avital:** Yeah, definitely. I think that there are three tiers of packages, one is just… I guess maybe even four. One is Tom Coleman just built a package and just puts it up there. `tmeasday/something` and that's it. Maybe you don't maintain it over time and it just disappears at some point.
+
+Then there's a package that has an owner, it's still `tmeasday/router`, but it's made sure to always stay up to date with the latest version of Meteor. Then it's something that people can use and they know that it's always going to work.
+
+Once a package like that becomes very common, we think it's maybe something that should be used by a lot of people and should be just `tmeasday/router`, then it can be upgraded to being a third party package that's… I've got it wrong. There are three steps.
+
+<%= pullquote "There will be a step where a package can become a core package.", "left" %>
+
+There will be a step where package can lose the prefix, basically, and become just a core package.
+
+### Adding Packages to the Core
+
+**Avital:** Part of the story is that the packages that are not part of Meteor will also be split out. So Meteor itself will actually be a very small number of packages. Stuff like Less or Coffeescript will also be outside of Meteor core the way you see it now. They will be their own separate thing. They will be equal to any other package that would, then, be upgraded from a third party package.
+
+We would take under our responsibility to maintain a package if we think it's a really good one. It's the way that we think a path forward is.
+
+**Tom:** That's, I guess, an exciting path for a third party developer to think one day their package might be blessed.
+
+**Avital:** I think realistically most packages… That are not what will happen to them. I just want to set expectations. But yes, that's definitely something we would like to have. There have been some examples, like the [Appcache package](http://docs.meteor.com/#appcache) was created by [Andrew Wilcox](https://github.com/awwx) and now part of core, because it was evident for everybody that that's something that we need.
+
+<%= pullquote "The Appcache package was created by Andrew Wilcox and is now part of core.", "right" %>
+
+Now, it did take us some time to get it to be usable the way that we think, just so that you can seamlessly add it and everything will work. That was work that we took under our responsibility and now we're going to be maintaining it.
+
+We also have to be careful because it takes a lot of work on our side to do that. It's just a trade up we're going to have to make.
+
+### NPM Support
+
+**Tom:** Of course. Just a little bit more about engine and packaging. You mentioned, before, that one of the big features to come out of that work that you did was NPM package support. I guess, just to start off with, is there anything you want to say about that? That was obviously a major design goal of this… 
+
+<%= pullquote "People make it seem like there are some big politics around NPM.", "right" %>
+
+**Avital:** I think sometimes people make it seem like there are some big politics around NPM, but I think it's actually fairly simple. We had been using NPM packages from day one. We had what we call the dead bundle where we put in every NPM packages we used. But no other package could also use additional NPM packages.
+
+The number one thing is we've kind of leveled the playing field and everybody can use NPM modules in their packages and then, by extension, in their app. But the more important, general story here is that we think NPM is great. People built a ton of package on NPM that solved a lot of things. But we think the NPM style of API is just not what most users want. We think that the callback style is just less easy to use than synchronous style.
+
+<%= pullquote "We think the NPM style of API is just not what most users want.", "left" %>
+
+Just basic care of API. NPM modules are sometimes created quickly by people who just make it work and submit it and that's fine. But if you really, really care about the user experience, then they're not good enough in many cases.
+
+The idea is that we create this layer of abstraction and you can use your packages to expose a good API. If you want to use an NPM module as an interpretation then that's fine, but you should go and control your API.
+
+At a higher level, that's all that Meteor is about. We use Node, Node runs Meteor, but we're basically creating a layer of abstraction on top of Node and on top of NPM and building what we think are just much better APIs going forward.
+
+### Synchronous vs Asynchronous
+
+**Tom:** Is there a particular argument why you think synchronous APIs are better than asynchronous APIs? Is it just something that's obvious to you?
+
+**Avital:** I think that the Node people have to answer the opposite question. Every other language and every other environment, basically in history for the most part, has done synchronous APIs. So the Node people, when they try to explain why they do asynchronous APIs, they say that it has to do with performance and the asynch model.
+
+<%= pullquote "When you use Fibers, you basically get the same run time performance benefits as the Node asynch style.", "right" %>
+
+It ends up just not actually being true. When you use Fibers, you basically get the same run time performance benefits as the Node asynch style with synchronous style APIs. I really just don't see why you would want an asynch API.
+
+**Tom:** I suppose there may be an argument about having more control over the thread and how it moves between sections of code.
+
+**Avital:** I guess the argument that maybe people come up with is that with a Node style you know exactly when your fiber or thread is going to yield so you can reason about which code will be executed sequentially and which might not.
+
+I accept that argument, but you might also want to know which functions change a global variable. There are a million things I'd like to know about what certain functions do. I think that could be achieved in different ways.
+
+Like you could have naming conventions or you could have helpers like no yield allowed where you say this section of code you can't yield, and indeed we do that at certain places. I think those could be resolved in a better way than just forcing every person to try to write two http calls to have to write like a nested callback.
+
+### Walled Gaderns  
+
+**Tom:** What do you say to the people that come in your walled garden and pick code? You guys are trying to stop people from sharing your packaged code and make sure it's outside of NPM.
+
+**Avital:** No, I don't think that's true. I don't know, a walled garden… Facebook is a walled garden. It's not open source, and you can't do anything to it. It is what it is, and that's it. iOS is sort of a walled garden. iOS is just what it is, and you can't change anything.
+
+<%= pullquote "The walled garden statement, I'm not sure what the point is.", "left" %>
+
+Meteor is an open source project, so the walled garden statement, it's like I'm not sure what the point is. They're right that we potentially diverge from NPM in various points of philosophy. But then there's just two competing systems.
+
+They're both open source, and you're welcome to choose whichever one you want. If you want to write a package in Meteor that's also an NPM package, you're also welcome to do that. You can publish it to both. It's fine. Nobody is stopping you.
+
+**Tom:** I guess the concern is that people think developers will write Meteor packages and not publish them on NPM and then others won't be able to use that code in other frameworks outside of Meteor.
+
+### Deep Ties
+
+**Avital:** I'll actually answer with a specific example that we have. We have a smart package called JS parse written by David Greenspan that parses JavaScript into an AST. We can use that later to do static analysis of code and all different things. That's written as a smart package, but that's a tool that could be useful for people that are just writing Node apps.
+
+<%= pullquote "Packages are tied deeply into the Meteor ecosystem.", "right" %>
+
+I think what we're going to end up doing is we will publish to Node and as a media smart package. Why not? Other packages are tied deeply into the Meteor ecosystem. That's the point of smart packages. They tie deeply into your app, and it's not just some code.
+
+If you have like the Appcache package, it doesn't mean anything to publish it to NPM because the whole point is it integrates into your bundler to know exactly what files you have. It's just up to the package developer. Sometimes it just doesn't make sense. When it does, then people are more than welcome to publish to NPM. We'd be happy to see that happen.
+
+### Exploring a New Galaxy
+
+**Tom:** That makes sense. Let's get away from that for a second and talk about what you're working on at the moment which you said is Galaxy and, I guess, the server scaling side of Meteor. What can you tell us about what's happening there?
+
+<%= pullquote "Galaxy is an application server. It's what you use to run your Meteor apps.", "right" %>
+
+**Avital:** Basically, Galaxy is an application server. It's what you use to run your Meteor apps. It could be on your own Cloud or inside your company servers or wherever it is you want to run it. The first step is just setting up all the systems in place so that you can provision new machines, run applications on them.
+
+You get all the bits that media servers run which is a proxy and different application servers that run your app on different machines and all communication between those.
+
+### Scaling Up
+
+Once we have that, we have a whole class of options in front of us, because now our server is not just one process running. It could be a number of processes on local machines running all sorts of things. So, for example, one thing we can build there is a Mongo up log server so we can list the changes going into Mongo and have a much more efficient invalidation system where we know which data has changed.
+
+Instead of having to pull the entire collection each time, we can immediately know what changes are there. That could add massive improvements to our service scalability story. Just in general, the fact that it can spawn multiple servers as needed, maybe even do it elastically as the load increases or decreases, that will solve a lot of the basic uncertainties people how now of "what's the story with running multiple servers? How do I provision them?"
+
+### Making Ops Easier
+
+Basically, the idea is people can right now use AWS and set up a version of Meteor with multiple servers running. But why would they have to do that?
+
+<%= pullquote "Galaxy will make the sysadmin or ops side of running Meteor as easy as possible.", "left" %>
+
+The Meteor framework is set up to make the user as happy as possible using it. Similarly Galaxy will make the sysadmin or ops side of running Meteor as easy as possible and most enjoyable. We think it's something that people will happily use.
+
+That will be the beginning of our business model. We can sell additional systems on top of that. It's still unknown what those will be, but that's going to be how we try to make money. The idea is to do it similarly to how successful previous businesses have done with the Java ecosystem, so like Spring or JBoss or these other companies that did exactly this.
+
+They had an application server. Parts of it are open source. Parts of it are for pay. Everybody ends up happy.
+
+### Open-Sourcing Galaxy?
+
+**Tom:** What you're saying is that parts of Galaxy will be released open source? This is the plan as things stand or you're not quite sure?
+
+**Avital:** I don't know that we know that level of detail, but I think that there should be a way to run a Meteor app… 
+
+**Tom:** Without having to… 
+
+**Avital:** I don't know. I actually don't know what the full story is. We don't, not just me. We haven't yet answered those questions.
+
+### Working at Meteor
+
+**Tom:** I won't hold you to anything, but I'm excited to see some of this stuff come out. I think it will be useful in my own projects. That's for sure. That's a really good picture of what you've been doing and what you're going to do. What's your feeling now having worked for Meteor for more than a year now?
+
+**Avital:** A little over a year now.
+
+**Tom:** How would you characterize it? Has it been fun?
+
+**Avital:** Yeah, it's awesome. I don't know what to say. I really think it's the best company. We don't talk too much about how awesome the company is. The amount of how much we don't talk about it is in proportion to how awesome it is.
+
+**Tom:** [laughs] Sure.
+
+**Avital:** We're just all focused on building this thing. We all see in front of us what the end result of our work could be, which is just like an amazing new world where the web is just amazingly easier to use. People build apps, and people that are in high school can learn how to build great web apps. We can just imagine how it's significantly better.
+
+We're all just focused on getting there. We're all motivated. We're all excited. Everybody is here is awesome, and it's great.
+
+**Tom:** [laughs] That's a pretty good point to leave it at, Avi. Thanks so much for telling us a bit about what's happening behind the scenes. We look forward to seeing some of this stuff soon.
+
+**Avital:** Awesome, yeah. I'm looking forward to finishing it.

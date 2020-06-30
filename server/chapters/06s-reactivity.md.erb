@@ -1,0 +1,114 @@
+---
+title: Reactivity
+slug: reactivity
+date: 0006/01/02
+number: 6.5
+level: starter
+sidebar: true
+photoUrl: http://www.flickr.com/photos/ikewinski/9632550278/
+photoAuthor: Mike Lewinski
+contents: Learn about Meteor's reactive code dependency system.|Understand the motivations and how it makes code declarative.|Learn to use advanced code that uses reactive data.
+paragraphs: 20
+---
+
+If collections are Meteor's core feature, then **reactivity** is the shell that makes that core useful.
+
+Collections radically transform the way your application deals with data changes. Rather than having to check for data changes manually (e.g. through an AJAX call) and then patch those changes into your HTML, data changes can instead come in at any time and get applied to your user interface seamlessly by Meteor.
+
+Take a moment to think it through: behind the scenes, Meteor is able to change *any* part of your user interface when an underlying collection is updated.
+
+The *imperative* way to do this would be to use `.observe()`, a cursor function that fires callbacks when documents matching that cursor change. We could then make changes to the DOM (the rendered HTML of our webpage) through those callbacks. The resulting code would look something like this:
+
+~~~js
+Posts.find().observe({
+  added: function(post) {
+    // when 'added' callback fires, add HTML element
+    $('ul').append('<li id="' + post._id + '">' + post.title + '</li>');
+  },
+  changed: function(post) {
+    // when 'changed' callback fires, modify HTML element's text
+    $('ul li#' + post._id).text(post.title);
+  },
+  removed: function(post) {
+    // when 'removed' callback fires, remove HTML element
+    $('ul li#' + post._id).remove();
+  }
+});
+~~~
+
+You can probably already see how such code is going to get complex pretty quickly. Imagine dealing with changes to *each attribute* of the post, and having to change complex HTML within the post's `<li>`. Not to mention all the complicated edge cases that can come out when we start relying on multiple sources of information that can all change in realtime. 
+
+<% note do %>
+
+### When *Should* We Use `observe()`?
+
+Using the above pattern is sometimes necessary, especially when dealing with third-party widgets. For example, let's imagine we want to add or remove pins on a map in real time based on Collection data (say, to show the locations of currently logged in users).
+
+In such cases, you'll need to use `observe()` callbacks in order to get the map to "talk" with the Meteor collection and know how to react to data changes. For example, you would rely on the `added` and `removed` callbacks to call the map API's own `dropPin()` or `removePin()` methods.
+
+<% end %>
+
+### A Declarative Approach
+
+Meteor provides us with a better way: reactivity, which is at its core a **declarative** approach. Being declarative lets us define the relationship between objects once and know they'll be kept in sync, instead of having to specify behaviors for every possible change. 
+
+This is a powerful concept, because a realtime system has many inputs that can all change at unpredictable times. By declaratively stating how we render HTML based on whatever reactive data sources we care about, Meteor can take care of the job of monitoring those sources and transparently take on the messy job of keeping the user interface up to date.
+
+All this to say that instead of thinking about `observe` callbacks, Meteor lets us write:
+
+~~~html
+<template name="postsList">
+  <ul>
+    {{#each posts}}
+      <li>{{title}}</li>
+    {{/each}}
+  </ul>
+</template>
+~~~
+
+And then get our list of posts with:
+
+~~~js
+Template.postsList.helpers({
+  posts: function() {
+    return Posts.find();
+  }
+});
+~~~
+
+Behind the scenes, Meteor is wiring up `observe()` callbacks for us, and re-drawing the relevant sections of HTML when the reactive data changes.
+
+### Dependency Tracking in Meteor: Computations
+
+While Meteor is a real-time, reactive framework, not *all* of the code inside a Meteor app is reactive. If this were the case, your whole app would re-run every time anything changed. Instead, reactivity is limited to specific areas of your code, and we call these areas **computations**. 
+
+In other words, a computation is a block of code that runs every time one of the reactive data sources it depends on changes. If you have a reactive data source (for example, a Session variable) and would like to respond reactively to it, you'll need to set up a computation for it. 
+
+Note that you usually don't need to do this explicitly because Meteor already gives each template and helper it renders its own special computation (meaning that you can be sure your templates will reactively reflect their source data).
+
+Every reactive data source tracks all the computations that are using it so that it can let them know when its own value changes. To do so, it calls the `invalidate()` function on the computation.
+
+Computations are generally set up to simply re-evaluate their contents on invalidation, and this is what happens to the template computations (although template computations also do some magic to try and redraw the page more efficiently). Although you can have more control on what your computation does on invalidation if you need to, in practice this is almost always the behavior you'll be using.
+
+### Setting Up a Computation
+
+Now that we understand the theory behind computations, actually setting one up will make a lot more sense. We can use the `Tracker.autorun` function to enclose a block of code in a computation and make it reactive:
+
+~~~js
+Meteor.startup(function() {
+  Tracker.autorun(function() {
+    console.log('There are ' + Posts.find().count() + ' posts');
+  });
+});
+~~~
+
+Note that we need to wrap the `Tracker` block inside a `Meteor.startup()` block to ensure that it only runs once Meteor has finished loading the `Posts` collection. 
+
+Behind the scenes, `autorun` then creates a computation, and wires it up to re-evaluate whenever the data sources it depends on change. We've set up a very simple computation that simply logs the number of posts to the console. Since `Posts.find()` is a reactive data source, it will take care of telling the computation to re-evaluate every time the number of posts changes.
+
+~~~js
+> Posts.insert({title: 'New Post'});
+There are 4 posts.
+~~~
+
+The net result of all this is that we can write code that uses reactive data in a very natural way, knowing that behind the scenes the dependency system will take care of re-running it at just the right times.

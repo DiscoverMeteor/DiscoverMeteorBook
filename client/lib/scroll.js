@@ -1,0 +1,1 @@
+RouterAutoscroll.animationDuration = 0;

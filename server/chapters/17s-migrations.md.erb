@@ -1,0 +1,126 @@
+---
+title: Migrations
+slug: migrations
+number: 17.5
+extra: true
+sidebar: true
+date: 0017/01/02
+level: full
+published: true
+photoUrl: http://www.flickr.com/photos/ikewinski/7810592472/in/photostream/
+photoAuthor: Mike Lewinski
+contents: Use a migration to update the data in our database.|Learn about important concerns when migrating production data.
+note: NOT INCLUDED IN FREE/TRANSLATED VERSIONS
+---
+
+During the last chapter we stumbled upon a common issue: our data became inconsistent.
+
+In this particular case, the problem was that some users were missing the `intercomHash` property. We dealt with the problem in the most brute-force way possible: by deleting them! But that's hardly a valid solution if our app is already deployed to production.
+
+One alternative would be writing some special code that deals with users without this property, but having to keep that method forever in our codebase feels like a large piece of technical debt just to deal with a few “incorrect” users.
+
+The better solution to this problem is to **migrate** the data -- to transform the database in such a way that it becomes entirely “correct”. In this chapter, we'll see how to use the `migrations` package to get us there. 
+
+### The Migrations Package
+
+We won't be focusing closely on how the package works behind the scenes, but there are a few nice things that it does for us that are worth noticing.
+
+1. **Tracking data version**: The package uses the `Migrations` collection to keep track of what version the database is up to date to. This makes it easy to copy databases around and run them against later code without needing to explicitly know what migrations have been run on them.
+2. **Reversible migrations**: By defining both a migration and its opposite operation, it becomes possible to reverse data migrations. This is useful if, for instance, we want to use our database against an old version of the code, or if we want to run a migration again.
+3. **Migration locking**: The package also tracks a migration in progress in the collection so it's not possible for two servers to be migrating the data at the same time (a potentially calamitous situation).
+
+### Installing the Package
+
+The package is hosted on Atmosphere, so it's easy to install:
+
+~~~bash
+meteor add percolate:migrations
+~~~
+
+### Writing the Migration
+
+If you think back to the last chapter, we were generating a hash from a user's email and storing it on the user object. We'll keep the same logic, but adapt it to work on our whole user collection, and not just a single document:
+
+~~~js
+var users = Meteor.users.find({intercomHash: {$exists: false}});
+users.forEach(function(user) {
+  Meteor.users.update(user._id, {$set: {
+    intercomHash: IntercomHash(user, '12345')
+  }});
+});
+~~~
+
+We're selecting every user without a hash, then updating it with the hash (which we calculate using the `intercomHash()` function we defined previously. Again, make sure to replace `12345` with your actual secret key. 
+
+What if we changed our mind later, and wanted to undo the migration? We'd need to *remove* the hash we just inserted:
+
+~~~js
+Meteor.users.update({}, {$unset: {intercomHash: true}}, {multi: true});
+~~~
+
+This gives us our “up” and “down” operations, which we can now pass to the Migrations package:
+
+~~~js
+Migrations.add({
+  name: 'Add intercom hash to users.',
+  version: 1,
+
+  up: function() {
+    var users = Meteor.users.find({intercomHash: {$exists: false}});
+    users.forEach(function(user) {
+      Meteor.users.update(user._id, {$set: {
+        intercomHash: IntercomHash(user, '12345')
+      }});
+    });
+  },
+
+  down: function() {
+    Meteor.users.update({}, {$unset: {intercomHash: true}}, {multi: true});
+  }
+});
+~~~
+<%= caption "server/migrations.js" %>
+
+### Running the Migration Locally
+
+We can run the migration locally by opening up a Meteor shell (with `meteor shell`) and then running the following command:
+
+~~~js
+Migrations.migrateTo('latest');
+~~~
+
+### Migrating On Production Systems
+
+Migrating a production system is significantly more involved, as there are some complexities to be concerned about.
+
+We need to decide if we want to automatically migrate up the latest data version when the server starts, of if we want to be a little more careful about it. 
+
+If we did want to run on server start, all it would take would be addding the following code to any server file:
+
+~~~js
+Migrations.migrateTo('latest');
+~~~
+
+Thanks to the migration locking code, we won't have problems with the migration running more than once, but it's often desirable to a little more control over when the migration runs than that.
+
+If that's the case, it's often better to have a non-user-facing "master" server with the ability to connect to the database and run the application's code, much like our local migration above. 
+
+### "In-Between" States
+
+Depending on our migration architecture (where we run the migration script from) and on what exactly the migration does, we may end up with a potentially lengthy period when our data is in an "in-between" state -- in this case, when some of our users have hashes and others do not.
+
+Usually, the safest approach is to make the following deployments:
+
+1. Old code.
+2. Intermediate code that deals correctly with both old and new data states.
+3. New code.
+
+The intermediate code should not contain new functionality, except that it should be equally at ease with both the old (without hashes) and new (with hashes) states. We would make sure we deploy this intermediate code first before running any migration.
+
+Going back to our Intercom example, our intermediate codebase *wouldn't* yet use the `intercomHash` property to talk to Intercom, but *would* set up the `onCreateUser` hook so that new users do get hashes. And it would also include the migration so that we can run it.
+
+### Technical Debt Trade-Offs
+
+While our example remains fairly straightforward, in the real world migrating data can become a complex problem. Sometimes, the complexity of such a migration can make it seem easier to just retain code that can handle both types of data forever. 
+
+Just be careful when exchanging less complexity now for more technical debt later on, especially if you'll still be the one in charge a couple years from now!

@@ -1,0 +1,557 @@
+---
+title: Errors
+slug: errors
+date: 0009/01/01
+number: 9
+level: book
+photoUrl: http://www.flickr.com/photos/ikewinski/9413892879/
+photoAuthor: Mike Lewinski
+contents: Create a better mechanism for displaying errors and messages.|Implement stricter form validation.|Add in-line error reporting to our forms.
+paragraphs: 31
+---
+
+Merely using the browser's standard `alert()` dialog to warn the user when there's a problem with their submission is a bit dissatisfying, and it certainly doesn't make for great UX. We can do better. 
+
+Instead, let's build a more versatile error reporting mechanism that will do a better job of telling the user what's going on without breaking up the flow.
+
+We are going to implement a simple system which displays new errors in the upper-right corner of the window, similar to popular Mac OS app [Growl](http://growl.info/). 
+
+### Introducing Local Collections
+
+To start off, we need to create a collection to store our errors in. Given that the errors are only relevant to the current session and don't need to be persistent in any way, we are going to do something new, and create a *local collection*. What this means is that the `Errors` collection will only exist *in the browser*, and will make no attempt to synchronize back to the server.
+
+To achieve this, we create the error inside the `client` directory (to make the collection client-only), with its MongoDB collection name set to `null` (since this collection's data will never be saved into the server-side database):
+
+~~~js
+// Local (client-only) collection
+Errors = new Mongo.Collection(null);
+~~~
+<%= caption "client/helpers/errors.js" %>
+
+Now that the collection has been created, we can add a `throwError` function which we'll call to add errors to it. We don't need to worry about `allow` or `deny` or any other security concerns, as this collection is “local” to the current user. 
+
+~~~js
+throwError = function(message) {
+  Errors.insert({message: message});
+};
+~~~
+<%= caption "client/helpers/errors.js" %>
+
+The advantage of using a local collection to store the errors is that, like all collections, it's reactive -- meaning we can reactively display errors in the same way we display any other collection data.
+
+### Displaying Errors
+
+We are going to insert errors at the top of our main layout:
+
+~~~html
+<template name="layout">
+  <div class="container">
+    {{> header}}
+    {{> errors}}
+    <div id="main">
+      {{> yield}}
+    </div>
+  </div>
+</template>
+~~~
+<%= caption "client/templates/application/layout.html" %>
+<%= highlight "4" %>
+
+Let's now create the `errors` and `error` templates in `errors.html`:
+
+~~~html
+<template name="errors">
+  <div class="errors">
+    {{#each errors}}
+      {{> error}}
+    {{/each}}
+  </div>
+</template>
+
+<template name="error">
+  <div class="alert alert-danger" role="alert">
+    <button type="button" class="close" data-dismiss="alert">&times;</button>
+    {{message}}
+  </div>
+</template>
+~~~
+<%= caption "client/templates/includes/errors.html" %>
+
+<% note do %>
+
+### Twin Templates
+
+You'll notice we're putting two templates in a single file. Up to now we've tried to adhere to a "one file, one template" convention, but as far as Meteor is concerned putting all our templates in a single file works just as well (although it would make for a very confusing `main.html`!).
+
+In this case, since both error templates are fairly short, we'll make an exception and put them in the same file to make our repo a bit cleaner. 
+
+<% end %>
+
+We just need to implement our template helper and we'll be good to go!
+
+~~~js
+Template.errors.helpers({
+  errors: function() {
+    return Errors.find();
+  }
+});
+~~~
+<%= caption "client/templates/includes/errors.js" %>
+
+You can already try testing out our new error messages manually. Just open the browser console and type:
+
+~~~js
+throwError("I'm an error!");
+~~~
+
+<%= screenshot "9-1", "Testing error messages." %>
+
+<%= commit "9-1", "Basic error reporting." %>
+
+<% note do %>
+
+### Two Kinds of Errors
+
+At this point it's important to make a distinction between “app-level” errors and “code-level” errors. 
+
+**App-level** errors are generally user-triggered, and users are in turn able to act upon them. These include things like validation errors, permission errors, “not found” errors, and so on. These are the kind of errors you want to show to the user in order to help them fix whatever problem they've just encountered.
+
+**Code-level** errors, on the other kind, are unexpectedly triggered by actual bugs in your code, and you probably *don't* want to surface them to users directly, but instead track them with some kind of third-party error-tracking service (such as [Kadira](http://kadira.io)).
+
+In this chapter, we'll focus on dealing with the first type of error, not on catching bugs. 
+
+<% end %>
+
+### Creating errors
+
+We now know how to display errors, but we still need to trigger one before we'll see anything. We've actually already implemented a good error scenario: our duplicate post warning. We'll simply replace the `alert` calls in the `postSubmit` event helper with the new `throwError` function we just set up:
+
+~~~js
+Template.postSubmit.events({
+  'submit form': function(e) {
+    e.preventDefault();
+    
+    var post = {
+      url: $(e.target).find('[name=url]').val(),
+      title: $(e.target).find('[name=title]').val()
+    };
+    
+    Meteor.call('postInsert', post, function(error, result) {
+      // display the error to the user and abort
+      if (error)
+        return throwError(error.reason);
+      
+      // show this result but route anyway
+      if (result.postExists)
+        throwError('This link has already been posted');
+    
+      Router.go('postPage', {_id: result._id});  
+    });
+  }
+});
+~~~
+<%= caption "client/templates/posts/post_submit.js" %>
+<%= highlight "13,17" %>
+
+While we're at it, we'll do the same thing for the `postEdit` event helper:
+
+~~~js
+Template.postEdit.events({
+  'submit form': function(e) {
+    e.preventDefault();
+    
+    var currentPostId = this._id;
+    
+    var postProperties = {
+      url: $(e.target).find('[name=url]').val(),
+      title: $(e.target).find('[name=title]').val()
+    }
+    
+    Posts.update(currentPostId, {$set: postProperties}, function(error) {
+      if (error) {
+        // display the error to the user
+        throwError(error.reason);
+      } else {
+        Router.go('postPage', {_id: currentPostId});
+      }
+    });
+  },
+  //...
+});
+~~~
+<%= caption "client/templates/posts/post_edit.js" %>
+<%= highlight "15" %>
+
+<%= commit "9-2", "Actually use the error reporting." %>
+
+Give it a try: try creating a post and entering the URL `http://meteor.com`. As this URL is already attached to a post in the fixtures, you should see:
+
+<%= screenshot "9-2", "Triggering an error" %>
+
+### Clearing Errors
+
+You'll notice the error messages are disappearing by themselves after a few seconds. This is actually due to a bit of CSS magic included in the stylesheet we added all the way back at the beginning of this book:
+
+~~~css
+@keyframes fadeOut {
+  0% {opacity: 0;}
+  10% {opacity: 1;}
+  90% {opacity: 1;}
+  100% {opacity: 0;}
+}
+
+//...
+
+.alert {
+  animation: fadeOut 2700ms ease-in 0s 1 forwards;
+  //...
+}
+~~~
+<%= caption "client/stylesheets/style.css" %>
+
+We're defining a `fadeOut` CSS animation that specifies four keyframes for the opacity property (at 0%, 10%, 90%, and 100% of the total animation duration), and applying this animation to the `.alert` class.
+
+The animation will run for 2700 milliseconds total, use the `ease-in` timing equation, run with a delay of 0 seconds, run only once, and finally stay at the last keyframe once it's done running.
+
+<% note do %>
+
+### Animations vs Animations
+
+You might be wondering why we're using CSS-based animations (which are pre-determined and outside of our app's control), instead of animations controlled by Meteor itself. 
+
+While Meteor does provide support for inserting animations, we wanted this chapter to be focused on errors. So we'll use “dumb” CSS animations for now and we'll leave the fancy stuff for the Animations chapter.
+
+<% end %>
+
+This works, but if you were to trigger multiple errors (by submitting the same link three times, for example) you'd notice that they're getting stacked on top of one another:
+
+<%= screenshot "9-3", "Stack overflow." %>
+
+This is because while the `.alert` elements are disappearing *visually*, they're still present in the DOM. We need to fix this.
+
+This is exactly the kind of situation where Meteor shines. Since the `Errors` collection is reactive, all we need to do to get rid of these old errors is remove them from the collection!
+
+We'll use `Meteor.setTimeout` to specify a callback function to be executed after the timeout (in this case, 3000 milliseconds) expires.
+
+~~~js
+Template.errors.helpers({
+  errors: function() {
+    return Errors.find();
+  }
+});
+
+Template.error.onRendered(function() {
+  var error = this.data;
+  Meteor.setTimeout(function () {
+    Errors.remove(error._id);
+  }, 3000);
+});
+~~~
+<%= caption "client/templates/includes/errors.js" %>
+<%= highlight "7~12" %>
+
+<%= commit "9-3", "Clear errors after 3 seconds." %>
+
+The [`onRendered`](http://docs.meteor.com/#/full/template_onRendered) callback triggers once our template has been rendered in the browser. Inside the callback, `this` refers to the current template instance, and `this.data` lets us access the data of the object that is currently being rendered (in our case, an error).
+
+### Seeking Validation
+
+So far we haven't enforced any kind of validation on our form. At the minimum, we'll want users to provide both a URL and a title for their new post. So let's make sure they do that.
+
+We'll do two things to point out any missing fields: first, we'll give a special `has-error` CSS class to the parent `div` of any problematic form field. Second, we'll display a helpful error message just below the field.
+
+To get started, let's prep our `postSubmit` template to accept these new helpers:
+
+~~~html
+<template name="postSubmit">
+  <form class="main form page">
+    <div class="form-group {{errorClass 'url'}}">
+      <label class="control-label" for="url">URL</label>
+      <div class="controls">
+          <input name="url" id="url" type="text" value="" placeholder="Your URL" class="form-control"/>
+          <span class="help-block">{{errorMessage 'url'}}</span>
+      </div>
+    </div>
+    <div class="form-group {{errorClass 'title'}}">
+      <label class="control-label" for="title">Title</label>
+      <div class="controls">
+          <input name="title" id="title" type="text" value="" placeholder="Name your post" class="form-control"/>
+          <span class="help-block">{{errorMessage 'title'}}</span>
+      </div>
+    </div>
+    <input type="submit" value="Submit" class="btn btn-primary"/>
+  </form>
+</template>
+~~~
+<%= caption "client/templates/posts/post_submit.html" %>
+<%= highlight "3,7,10,14" %>
+
+Note that we're passing parameters (`url` and `title` respectively) to each helper. This lets us reuse the same helper both times, modifying its behavior based on the parameter.
+
+Now for the fun part: making these helpers actually do something.
+
+We'll use the **Session** to store a `postSubmitErrors` object containing any potential error message. As the user interacts with the form, this object will change, which in turn will reactively update the form's markup and contents.
+
+First, we'll initialize the object whenever the `postSubmit` template is created. This ensures that the user won't see old error messages left over from a previous visit to this page.
+
+We then define our two template helpers. They both look at the `field` property of `Session.get('postSubmitErrors')` (where `field` is either `url` or `title` depending on where we're calling the helper from). 
+
+While `errorMessage` simply returns the message itself, `errorClass` checks for the *presence* of a message and returns `has-error` if such a message exists.
+
+~~~js
+Template.postSubmit.onCreated(function() {
+  Session.set('postSubmitErrors', {});
+});
+
+Template.postSubmit.helpers({
+  errorMessage: function(field) {
+    return Session.get('postSubmitErrors')[field];
+  },
+  errorClass: function (field) {
+    return !!Session.get('postSubmitErrors')[field] ? 'has-error' : '';
+  }
+});
+
+//...
+~~~
+<%= caption "client/templates/posts/post_submit.js" %>
+<%= highlight "1~12" %>
+
+You can test that our helpers are working properly by opening the browser console and typing the following line of code:
+
+~~~js
+Session.set('postSubmitErrors', {title: 'Warning! Intruder detected. Now releasing robo-dogs.'});
+~~~
+<%= caption "Browser console" %>
+
+<%= screenshot "9-4", "Red alert! Red alert!" %>
+
+The next step is actually hooking up that `postSubmitErrors` Session object to the form. 
+
+Before doing so, we'll create a new `validatePost` function in `posts.js` that looks at a `post` object, and returns an `errors` object containing any relevant errors (namely, whether the `title` or `url` fields are missing):
+
+~~~js
+//...
+
+validatePost = function (post) {
+  var errors = {};
+
+  if (!post.title)
+    errors.title = "Please fill in a headline";
+  
+  if (!post.url)
+    errors.url =  "Please fill in a URL";
+
+  return errors;
+}
+
+//...
+~~~
+<%= caption "lib/collections/posts.js" %>
+<%= highlight "3~13" %>
+
+We'll call this function from the `postSubmit` event helper:
+
+~~~js
+Template.postSubmit.events({
+  'submit form': function(e) {
+    e.preventDefault();
+    
+    var post = {
+      url: $(e.target).find('[name=url]').val(),
+      title: $(e.target).find('[name=title]').val()
+    };
+    
+    var errors = validatePost(post);
+    if (errors.title || errors.url)
+      return Session.set('postSubmitErrors', errors);
+    
+    Meteor.call('postInsert', post, function(error, result) {
+      // display the error to the user and abort
+      if (error)
+        return throwError(error.reason);
+      
+      // show this result but route anyway
+      if (result.postExists)
+        throwError('This link has already been posted');
+    
+      Router.go('postPage', {_id: result._id});  
+    });
+  }
+});
+~~~
+<%= caption "client/templates/posts/post_submit.js" %>
+<%= highlight "10~12" %>
+
+Notice that we're using `return` to abort the execution of the helper if any errors are present, not because we want to actually return this value anywhere. 
+
+<%= screenshot "9-5", "Caught red-handed." %>
+
+### Server-side Validation
+
+We're not quite done though. We're validating the presence of a URL and title on the *client*, but what about the *server*? After all, someone could still try to enter an empty post by manually calling the `postInsert` method through the browser console.
+
+Even though we don't need to display any error messages on the server, we can still make use of that same `validatePost` function. Except this time we'll call it from within the `postInsert` *method* too, and not just the event helper:
+
+~~~js
+Meteor.methods({
+  postInsert: function(postAttributes) {
+    check(this.userId, String);
+    check(postAttributes, {
+      title: String,
+      url: String
+    });
+    
+    var errors = validatePost(postAttributes);
+    if (errors.title || errors.url)
+      throw new Meteor.Error('invalid-post', "You must set a title and URL for your post");
+    
+    var postWithSameLink = Posts.findOne({url: postAttributes.url});
+    if (postWithSameLink) {
+      return {
+        postExists: true,
+        _id: postWithSameLink._id
+      }
+    }
+    
+    var user = Meteor.user();
+    var post = _.extend(postAttributes, {
+      userId: user._id, 
+      author: user.username, 
+      submitted: new Date()
+    });
+    
+    var postId = Posts.insert(post);
+    
+    return {
+      _id: postId
+    };
+  }
+});
+~~~
+<%= caption "lib/collections/posts.js" %>
+<%= highlight "9~11" %>
+
+Again, users should normally never have to see this “You must set a title and URL for your post” message. It will only ever show up if someone wants to bypass the user interface we painstakingly put together, and uses the console directly instead. 
+
+To test this out, open up the browser console and try entering a post with no URL:
+
+~~~js
+Meteor.call('postInsert', {url: '', title: 'No URL here!'});
+~~~
+
+If we've done our job properly, you'll get back a scary bunch of code along with the message “You must set a title and URL for your post”.
+
+<%= commit "9-4", "Validate post contents on submission." %>
+
+### Edition Validation
+
+To round things up, we'll also apply the same validation to our post *edit* form. The code will look pretty similar. First, the template:
+
+~~~html
+<template name="postEdit">
+  <form class="main form page">
+    <div class="form-group {{errorClass 'url'}}">
+      <label class="control-label" for="url">URL</label>
+      <div class="controls">
+          <input name="url" id="url" type="text" value="{{url}}" placeholder="Your URL" class="form-control"/>
+          <span class="help-block">{{errorMessage 'url'}}</span>
+      </div>
+    </div>
+    <div class="form-group {{errorClass 'title'}}">
+      <label class="control-label" for="title">Title</label>
+      <div class="controls">
+          <input name="title" id="title" type="text" value="{{title}}" placeholder="Name your post" class="form-control"/>
+          <span class="help-block">{{errorMessage 'title'}}</span>
+      </div>
+    </div>
+    <input type="submit" value="Submit" class="btn btn-primary submit"/>
+    <hr/>
+    <a class="btn btn-danger delete" href="#">Delete post</a>
+  </form>
+</template>
+~~~
+<%= caption "client/templates/posts/post_edit.html" %>
+<%= highlight "3,7,10,14" %>
+
+Then the template helpers:
+
+~~~js
+Template.postEdit.onCreated(function() {
+  Session.set('postEditErrors', {});
+});
+
+Template.postEdit.helpers({
+  errorMessage: function(field) {
+    return Session.get('postEditErrors')[field];
+  },
+  errorClass: function (field) {
+    return !!Session.get('postEditErrors')[field] ? 'has-error' : '';
+  }
+});
+
+Template.postEdit.events({
+  'submit form': function(e) {
+    e.preventDefault();
+    
+    var currentPostId = this._id;
+    
+    var postProperties = {
+      url: $(e.target).find('[name=url]').val(),
+      title: $(e.target).find('[name=title]').val()
+    }
+    
+    var errors = validatePost(postProperties);
+    if (errors.title || errors.url)
+      return Session.set('postEditErrors', errors);
+    
+    Posts.update(currentPostId, {$set: postProperties}, function(error) {
+      if (error) {
+        // display the error to the user
+        throwError(error.reason);
+      } else {
+        Router.go('postPage', {_id: currentPostId});
+      }
+    });
+  },
+  
+  'click .delete': function(e) {
+    e.preventDefault();
+    
+    if (confirm("Delete this post?")) {
+      var currentPostId = this._id;
+      Posts.remove(currentPostId);
+      Router.go('postsList');
+    }
+  }
+});
+~~~
+<%= caption "client/templates/posts/post_edit.js" %>
+<%= highlight "1~12,25~27,32" %>
+
+Just like we did for the post submit form, we'll also want to validate our posts on the server. Except that you'll remember we're not using a method to edit posts, but an `update` call directly from the client. 
+
+This means we'll have to add a new `deny` callback instead:
+
+~~~js
+//...
+
+Posts.deny({
+  update: function(userId, post, fieldNames, modifier) {
+    var errors = validatePost(modifier.$set);
+    return errors.title || errors.url;
+  }
+});
+
+//...
+~~~
+<%= caption "lib/collections/posts.js" %>
+<%= highlight "3~8" %>
+
+Note that the `post` argument refers to the *existing* post. In this case, we want to validate the *update*, which is why we're calling `validatePost` on the contents of the `modifier`'s `$set` property (as in `Posts.update({$set: {title: ..., url: ...}})`).
+
+This works because `modifier.$set` contains the same two `title` and `url` property as the whole `post` object would. Of course, it does mean that any partial update affecting only `title` or only `url` will fail, but in practice that shouldn't be an issue. 
+
+You might notice this is our second `deny` callback. When adding multiple `deny` callbacks, the operation will fail if any one of them returns `true`. In this case, this means the `update` will only succeed if it's only targeting the `title` and `url` fields, as well as if neither one of these fields are empty. 
+
+<%= commit "9-5", "Validate post contents when editing." %>

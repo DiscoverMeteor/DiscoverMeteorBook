@@ -1,0 +1,91 @@
+// old quotes
+// blockquote{
+//   &.pull{
+//     font-size:22px;
+//     line-height:1.8;
+//     &:before{
+//       content:'\201C';
+//     }
+//     &:after{
+//       content:'\201D';
+//     }
+//   }
+//   @include medium{
+//     &.pull-right{
+//       width:200px;
+//       float:right;
+//       margin:0 0px 40px 40px;
+//     }
+//     &.pull-left{
+//       width:200px;
+//       float:left;
+//       margin:0 40px 40px 0px;
+//     }
+//   }
+//   @include large{
+//     &.pull-right{
+//       margin:0 -100px 40px 40px;
+//     }
+//     &.pull-left{
+//       margin:0 40px 40px -100px;
+//     }   
+//   }
+// }
+
+blockquote{
+  @extend .secondary-font;
+  &.pull{
+    font-size:20px;
+    line-height:1.5;
+    padding: 20px 0;
+    &:before{
+      content:'\201C';
+    }
+    &:after{
+      content:'\201D';
+    }
+  }
+  &.pull-center{
+    text-align: center;
+  }
+  @include small{
+    &.pull-wide{
+      margin-right: auto !important;
+      margin-left: auto !important;
+    }    
+  }
+  @include medium{
+    &.pull-right{
+      width:300px;
+      float:right;
+      margin:0 -150px 40px 60px;
+    }
+    &.pull-left{
+      width:300px;
+      float:left;
+      margin:0 60px 40px -150px;
+    }
+    &.pull-wide{
+      text-align: center;
+      margin-right: -100%;
+      margin-left: -100%;
+    }
+  }
+}
+.post-content{
+  blockquote{
+    padding: 20px 40px;
+    border-top: 1px solid $light-border;
+    border-bottom: 1px solid $light-border;
+    font-style: italic;
+    p:last-child{
+      margin: 0;
+    }
+    cite{
+      display: block;
+      text-align: right;
+      margin-top:5px;
+      font-weight: bold;
+    }
+  }
+}

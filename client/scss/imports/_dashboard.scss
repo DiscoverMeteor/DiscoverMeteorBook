@@ -1,0 +1,27 @@
+.dashboard-container{
+  @include medium{
+    margin: 80px 20px 40px 20px;
+  }
+}
+
+.dashboard{
+  width: 100%;
+}
+
+.upgrade-user{
+  text-decoration: none;
+  padding: 5px 10px;
+  white-space: nowrap;
+  text-shadow: none;
+  margin-bottom: 2px;
+}
+.code-marker{
+  position: static;
+  top: 0px;
+  text-shadow: none;
+  font-size: 11px;
+  line-height: 1.4;
+  height: auto;
+  padding: 3px 6px;
+  background: $light-bg;
+}

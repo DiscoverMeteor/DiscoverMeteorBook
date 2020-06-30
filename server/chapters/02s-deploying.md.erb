@@ -1,0 +1,48 @@
+---
+title: Deployment
+slug: deploying
+date: 0002/01/02
+number: 2.5
+level: free
+sidebar: true
+photoUrl: http://www.flickr.com/photos/monomaniacgarage/10703829133/
+photoAuthor: Monomaniacgarage
+contents: Learn how to deploy on Meteor.com.|Learn how to deploy on Modulus.|Learn how to deploy on your own server using Meteor Up.
+paragraphs: 46
+---
+
+Some people like to work quietly on a project until it's perfect, while others can't wait to show the world as soon as possible.
+
+If you're the first kind of person and would rather develop locally for now, feel free to skip this chapter. On the other hand, if you'd rather take the time to learn how to deploy your Meteor app online, we've got you covered.
+
+We will be learning how to deploy a Meteor app in few different ways. Feel free to use each of them at any stage of your development process, whether you're working on Microscope or any other Meteor app. Let's get started!
+
+<% note do %>
+
+### Introducing Sidebars
+
+This is a **sidebar** chapter. Sidebars take a deeper look at more general Meteor topics independently of the rest of the book.
+
+So if you'd rather go on with building Microscope, you can safely skip it for now and come back to it later.
+
+<% end %>
+
+### Deploying On Heroku
+
+A fast and easy (and free!) way to deploy your Meteor app is to deploy to [Heroku](http://www.heroku.com) using the [Horse buildpack](https://github.com/AdmitHub/meteor-buildpack-horse). 
+
+See the [readme](https://github.com/AdmitHub/meteor-buildpack-horse) for a step-by-step explanation.
+
+### Deploying On Galaxy
+
+[Galaxy](https://www.meteor.com/hosting) is the Meteor Development Group's official hosting platform, and it's built in right into the Meteor command line tool via the `meteor deploy` command. 
+
+Galaxy doesn't offer a free plan, but it's a great option once you're ready to push your app live. 
+
+Note that the Meteor Development Group used to provide a free hosting service (usually referred to as just “Meteor hosting”) but as of March 2016, that free tier sadly doesn't exist anymore. 
+
+### Deploying with MupX
+
+Finally, if you'd rather deploy on your own servers, [MupX](https://github.com/arunoda/meteor-up/tree/mupx) is a handy Docker deploy script that will set up and deploy your app on any Digital Ocean, AWS, etc. box. 
+
+These three ways of deploying Meteor apps should be enough for most use cases. Of course, we know some of you would prefer to be in complete control and set up their Meteor server from scratch. But that's a topic for another day… or maybe another book!

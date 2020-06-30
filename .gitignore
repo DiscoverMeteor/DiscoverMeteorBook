@@ -1,0 +1,14 @@
+*.sublime-project
+*.sublime-workspace
+*.sass-cache
+codekit-config.json
+client/codekit-config.json
+*.DS_Store
+
+book.discovermeteor.com.key
+book_discovermeteor_com.crt
+*.pem
+node_modules
+
+settings.json
+dumps

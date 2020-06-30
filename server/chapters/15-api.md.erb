@@ -1,0 +1,367 @@
+---
+title: RSS Feeds & APIs
+slug: rss-api
+date: 0015/01/01
+number: 15
+extra: true
+level: full
+published: true
+photoUrl: http://www.flickr.com/photos/ikewinski/8623402756/
+photoAuthor: Mike Lewinski
+contents: Learn about server-side routing.|Create an RSS feed.|Build a simple GET API.
+note: NOT INCLUDED IN FREE/TRANSLATED VERSIONS
+---
+
+<% note do %>
+
+### Introducing Extra Chapters
+
+The main body of the book focused on the essentials: adding user accounts, setting permissions, managing publications, displaying errors, etc. 
+
+But while that gives us a pretty good base, in the real world apps don't just exist by themselves: they often need to interact with various third-party services such as analytics providers and other assorted APIS. So in these extra chapters, we'll examine a few more advanced topics, beginning with how to build APIs for Meteor apps.
+
+Note that you'll find the code for these chapters in the [extra branch](https://github.com/DiscoverMeteor/Microscope/tree/extra) on GitHub. 
+
+<% end %>
+
+Up to now, we've only ever talked to our app through the client. Even when using the console inside our browser, we were still relying on Meteor's client-side JavaScript code to communicate with the server, and through it with the database. 
+
+But did you know that it's also possible to talk with the server directly? 
+
+If you tried to access a Meteor app with JavaScript turned off, you'd see nothing more than a blank page. That's because when a client first connects to a Meteor app, the server doesn't reply with any HTML or images like a "normal" web app would: instead, it only sends back the app's JavaScript code, and it's that code which in turns loads all of our app's content when it gets executed by the browser. 
+
+Disable JavaScript, and that code never runs, meaning the app never gets a chance to load any content. This becomes problematic when we try to build stuff like RSS feeds or APIs: RSS readers can't execute JavaScript code when they fetch a feed, so how are they supposed to ever access an app's content? 
+
+### Server-Side Routing
+
+We need a way to tell the server to send back actual data, and not JavaScript code. And this is where Iron Router's server-side routing comes in. 
+
+Routing server-side is pretty similar to how things work client-side, although it isn't quite as full-featured. One notable difference is that Meteor doesn't (yet) support server-side templates. So instead of redirecting each route to a specific template, we'll include the code we want to output right there in the route definition. 
+
+Let's start by building a simple “hello world” route, which we'll make available at `/feed.xml`. 
+
+Since our `router.js` file lives in the `/lib` directory, it's already available on both the client and server. This means we can append our new server-side route to our existing route map, using the `where` option to specify that this will be a server-side route:
+
+~~~js
+//...
+
+Router.route('/feed.xml', {
+  where: 'server',
+  name: 'rss',
+  action: function() {
+    this.response.write('hello world');
+    this.response.end();
+  }
+});
+
+//...
+~~~
+<%= caption "lib/router.js" %>
+<%= highlight "3~10" %>
+
+If you tried out this route right now, you'd get an error. That's because we've assigned the `loading` filter to trigger on all routes, and that filter happens to be only available to the client. 
+
+So before anything else, let's make sure we deactivate all filters when on the server:
+
+~~~js
+if (Meteor.isClient){
+  Router.onBeforeAction('dataNotFound', {only: 'postPage'});
+  Router.onBeforeAction(requireLogin, {only: 'postSubmit'});
+}
+~~~
+
+We can test that this route is working properly even without JavaScript by using the `curl` command:
+
+~~~bash
+curl "http://localhost:3000/feed.xml"
+hello world
+~~~
+<%= caption "console" %>
+
+We can see that we get the simple text response that we specified, rather than the complete website which we'd find at [http://localhost:3000/](http://localhost:3000/).
+
+Iron Router supports a variety of options for server-side routing responses, notably setting headers and status codes on responses. You can read more about it in the [documentation](https://github.com/EventedMind/iron-router#server-side-routing).
+
+<%= commit "15-1", "Hello world for server-side routing." %>
+
+### Building The RSS Package From NPM
+
+As you've probably guessed by now, the first thing we'll use server-side routes for is building an RSS feed for our `/new` view. Building our feed entirely by hand would quickly get tedious, so we'll use an existing [Node.js package](https://www.npmjs.org/package/rss) to help generate it for us.
+
+Unlike Atmosphere packages (which are specific to Meteor), Node.js Packaged Modules are not optimized for Meteor apps. A lot of them still work just fine though! 
+
+To make use of the NPM RSS package, we'll create our own RSS local package to act as a wrapper. Create a new `rss` directory inside `/packages`, and add the following code to its `package.js`:
+
+~~~js
+Package.describe({
+  name: "rss",
+  summary: "RSS feed generator",
+  version: '0.1.0'
+});
+
+Npm.depends({rss: '1.0.0'});
+
+Package.onUse(function (api) {
+  api.versionsFrom('0.9.4');
+  api.addFiles('rss.js', 'server');
+  api.export('RSS');
+});
+~~~
+<%= caption "packages/rss/package.js" %>
+
+The key function here is `Npm.depends()`. This is what tells Meteor that we want to include the [RSS NPM package](https://npmjs.org/package/rss).
+
+We're telling Meteor that our package will make use of a single file named `rss.js`, and that this file's code should only be executed on the server.
+
+Once we've included the package, we can then load it using `Npm.require()` to make it globally available at the `RSS` namespace. Create a new `rss.js` file in the `/package/rss` directory, and type:
+
+~~~js
+RSS = Npm.require('rss');
+~~~
+<%= caption "packages/rss/rss.js" %>
+
+As usual, don't forget to load your new package with:
+
+~~~bash
+meteor add rss
+~~~
+
+<% note do %>
+
+### Local Packages
+
+Local packages are a great way to isolate any third-party or generic code within your app, without having to go through the trouble of actually publishing a package. As a rule of thumb, it's a good idea to use local packages for any code that's not specific to your app. 
+
+Not only does this keep things cleaner, but it'll make it easier to swap things out if, say, somebody comes out with a better RSS package for Meteor in the future. 
+
+<% end %>
+
+### Testing Our Feed
+
+Let's flesh out our feed by giving it a title and a description:
+
+~~~js
+//...
+
+Router.route('/feed.xml', {
+  where: 'server',
+  name: 'rss',
+  action: function() {
+    var feed = new RSS({
+      title: "New Microscope Posts",
+      description: "The latest posts from Microscope, the smallest news aggregator."
+    });
+    this.response.write(feed.xml());
+    this.response.end();
+  }
+});
+
+//...
+~~~
+<%= caption "lib/router.js" %>
+<%= highlight "7~11" %>
+
+Now if we browse to our feed URL, we should see the output of that simple feed XML:
+
+~~~bash
+curl "http://localhost:3000/feed.xml"
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[New Microscope Posts]]></title><description><![CDATA[The latest posts from Microscope, the smallest news aggregator.]]></description><link>http://github.com/dylan/node-rss</link><generator>NodeJS RSS Module</generator><lastBuildDate>Tue, 25 Jun 2013 05:21:36 GMT</lastBuildDate></channel></rss>
+~~~
+<%= caption "console" %>
+
+<%= commit "15-2", "Created RSS package, use it to create a rudimentary feed." %>
+
+### Filling In Our Feed
+
+Building our feed is relatively straightforward: we'll get the 20 latest posts, then iterate over them with Meteor's `forEach`. At each iteration, we'll use the RSS object's `item()` method to add the post to our feed:
+
+~~~js
+//...
+
+Router.route('/feed.xml', {
+  where: 'server',
+  name: 'rss',
+  action: function() {
+    var feed = new RSS({
+      title: "New Microscope Posts",
+      description: "The latest posts from Microscope, the smallest news aggregator."
+    });
+
+    Posts.find({}, {sort: {submitted: -1}, limit: 20}).forEach(function(post) {
+      feed.item({
+        title: post.title,
+        description: post.body,
+        author: post.author,
+        date: post.submitted,
+        url: '/posts/' + post._id
+      })
+    });
+      
+    this.response.write(feed.xml());
+    this.response.end();
+  }
+});
+
+//...
+~~~
+<%= caption "lin/router.js" %>
+<%= highlight "12~20" %>
+
+<%= commit "15-3", "List each post in the feed." %>
+
+<% note do %>
+
+### RSS Polling
+
+You'll note that we're displaying the 20 latest items. RSS readers poll a feed every X minutes to see if there are any new items (where X depends on the service). 
+
+So if you expect a *lot* of activity on your site, you might want to increase that number to make sure items don't slip between the gaps, or alternatively always display items for the past 24 hours, no matter how much there are. 
+
+<% end %>
+
+### Linking Up Our Feed
+
+The last step is making our feed discoverable by readers or by the browser (well, if browsers still cared about RSS feeds, that is). We only need to add a `<link>` tag to our header:
+
+~~~html
+<head>
+  <title>Microscope</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/feed.xml"/>
+</head>
+~~~
+<%= caption "client/main.html" %>
+<%= highlight "3" %>
+
+We can now test that our RSS feed is working properly by downloading a RSS reader such as [Vienna](http://www.vienna-rss.org/) for Mac OS, [FeedDemon](http://www.feeddemon.com/) for Windows, or [Liferea](http://lzone.de/liferea/) for Linux and pointing it to `http://localhost:3000/feed.xml` (a web-based reader won't work unless you push the feed to a live server).
+
+<%= commit "15-4", "Added an RSS link to the site header." %>
+
+### A Simple API
+
+We can take the exact same technique we just used for our RSS feed and use it to create a simple GET API, with a small differences: this time, one of our routes will take a parameter.
+
+First, let's build a route that displays the latest posts:
+
+~~~js
+//...
+
+Router.route('/feed.xml', {
+  //...
+});
+
+Router.route('/api/posts', {
+  where: 'server',
+  name: 'apiPosts',
+  action: function() {
+    var data = Posts.find().fetch();
+    this.response.write(JSON.stringify(data));
+    this.response.end();
+  }
+});
+
+//...
+~~~
+<%= caption "lib/router.js" %>
+<%= highlight "7~15" %>
+
+All we're doing here is outputing the contents of our database by returning the stringified JSON data.
+
+<%= commit "15-5", "Built a simple /api/posts route." %>
+
+### Dealing With Parameters
+
+So far so good. But in the real world, it wouldn't be very practical to return *all* posts for every API request. And it also doesn't make sense to return every single property of each posts. We need to add a limiting parameter, and we need to restrict the amount of data we output:
+
+~~~js
+//...
+
+this.route('rss', {
+  //...
+});
+
+Router.route('/api/posts', {
+  where: 'server',
+  name: 'apiPosts',
+  action: function() {
+    var parameters = this.request.query,
+        limit = !!parameters.limit ? parseInt(parameters.limit) : 20,
+        data = Posts.find({}, {limit: limit, fields: {title: 1, author: 1, url: 1, submitted: 1, }}).fetch();
+
+    this.response.write(JSON.stringify(data));
+    this.response.end();
+  }
+});
+
+//...
+~~~
+<%= caption "lib/router.js" %>
+<%= highlight "7~15" %>
+
+Let's break down what we're doing here. First, we're getting the current request's parameters with `this.request.query`. We then use the shorthand "if/else" statement syntax (`a ? b : c`) to check if `parameters.limit` is set. If it is, we use this as our `limit` variable, and if not we default to `20`. 
+
+Finally, we use that `limit` variable along with a [field specificer](http://docs.meteor.com/#fieldspecifiers) object to build our `find()` query.
+
+Let's give it a try!
+
+~~~bash
+curl http://localhost:3000/api/posts?limit=3
+[
+{"title":"Introducing Telescope","author":"Sacha Greif","url":"http://sachagreif.com/introducing-telescope/","submitted":1389055069603,"_id":"jBWwNNAhSDSxgaatC"},
+{"title":"Meteor","author":"Tom Coleman","url":"http://meteor.com","submitted":1389044269603,"_id":"kYGexqxDpih6uQqN3"},
+{"title":"The Meteor Book","author":"Tom Coleman","url":"http://themeteorbook.com","submitted":1389037069603,"_id":"QgJnFFNeyaeyyrQr8"}
+]
+~~~
+
+<%= commit "15-6", "Limiting the /api/posts route." %>
+
+### The Single Post API
+
+To finish up, let's also extend our API to handle requests for a specific post:
+
+~~~js
+//...
+
+Router.route('/api/posts', {
+  //...
+});
+
+Router.route('/api/posts/:_id', {
+  where: 'server',
+  name: 'apiPost',
+  action: function() {
+    var post = Posts.findOne(this.params._id);
+
+    if(post){
+      this.response.write(JSON.stringify(post));
+    } else {
+      this.response.writeHead(404, {'Content-Type': 'text/html'});
+      this.response.write("Post not found.");
+    }
+    this.response.end();
+  }
+});
+
+//...
+~~~
+<%= caption "lib/router.js" %>
+<%= highlight "7~21" %>
+
+We'll look up the post and return it if we found it. If we don't, we return a 404 header along with a "Post not found" message. We can now test that everything is working properly (make sure to replace `kYGexqxDpih6uQqN3d` by a valid `_id` of your own):
+
+~~~bash
+curl http://localhost:3000/api/posts/kYGexqxDpih6uQqN3d
+{"title":"Meteor","userId":"2j3uJ859uT8FdQRz8","author":"Tom Coleman","url":"http://meteor.com","submitted":1389044269603,"commentsCount":0,"upvoters":[],"votes":0,"_id":"kYGexqxDpih6uQqN3"}
+~~~
+
+And that our error message appears as well:
+
+~~~bash
+$ curl http://localhost:3000/api/posts/1337
+Post not found.
+~~~
+
+<%= commit "15-7", "Basic route for showing a post." %>
+
+As of this writing, Meteor does not yet support *real* server-side rendering (i.e. rendering the same templates as on the client). But as we've just seen, that doesn't need to prevent us from building simple server-side routes for features such as RSS feeds or APIs. 
+

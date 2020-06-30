@@ -1,0 +1,75 @@
+header{
+	// background:#10061b;
+	// @include background(linear-gradient(top, 
+	// 	#10061b 0%, #252134 50%,	#594f75 100%			
+	// ));
+	// background:#10061b url(/images/stars-bg.jpg) center top no-repeat;
+	// background-size:100% auto;
+	background:black(0.8);
+	color:white;
+	text-align:center;
+	text-shadow: 0px 0px 10px white(0.6);
+	position: absolute;
+	top: 0px;
+	width: 100%;
+	z-index: 50;
+	display: table;
+	min-height: 40px;
+	.row{
+		display: table-cell; 
+		vertical-align: middle; 
+		text-align: center; 	
+	}
+	h1{
+		text-transform:uppercase;
+		margin:0px;
+		@include small{
+			font-size: 14px;
+		}
+		@include medium{
+			font-size:18px;
+		}
+		letter-spacing:0.5em;
+		a:link, a:active, a:visited{
+			color:white;
+		}
+		a:hover{
+			color:$hover;
+		}
+		span{
+			@extend .secondary-font;
+			font-weight:light();
+		}
+		strong{
+			@extend .secondary-font;
+			font-weight:bold();
+		}
+		@include small{
+			font-size:16px;
+		}
+	}
+	h3{
+		color:white(0.7);
+		font-weight:light();
+		font-size:16px;
+		margin:0;
+	}
+}
+.support-link{
+	@extend .secondary-font;
+	float:right;
+	line-height:80px;
+	&:link, &:visited, &:hover{
+		color:white;
+	}
+	.unread_counter{
+		color:$yellow;
+		display:inline-block;
+		border-radius: 30px;
+		height:20px;
+		width:20px;
+		line-height:20px;
+		background:white(0.3);
+		margin-left:3px;
+	}
+}

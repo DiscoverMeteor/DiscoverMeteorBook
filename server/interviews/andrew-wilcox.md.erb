@@ -1,0 +1,289 @@
+---
+title: Andrew Wilcox
+level: full
+slug: andew-wilcox
+---
+
+## An Interview with Andrew Wilcox
+
+<% note do %>
+
+[Download MP3 Part 1 (41 mb, 22 min)](https://s3.amazonaws.com/discovermeteor/interviews/DiscoverMeteor-Andrew_Wilcox-Part_1.mp3)
+
+[Download MP3 Part 2 (34 mb, 18 min)](https://s3.amazonaws.com/discovermeteor/interviews/DiscoverMeteor-Andrew_Wilcox-Part_2.mp3)
+
+[Download PDF](https://s3.amazonaws.com/DiscoverMeteor/DiscoverMeteor-Andrew_Wilcox.pdf)
+
+<% end %>
+
+<%= figure "interviews/andrew.jpg", "Andrew Wilcox", "portrait" %>
+
+**Sacha Greif:** Hey I'm here with Andrew Wilcox and we're going to talk about his Meteor packages, including the appcache package and the upcoming offline-data package. Hi, Andrew.
+
+**Andrew Wilcox:** Hello, thank you very much for having me.
+
+**Sacha:** First of all, could you introduce yourself and talk about how you came to discover Meteor?
+
+**Andrew:** Last year I started work on a side project which was a workbook application. The idea was that coaches might like to have an online workbook that they could share their exercises and worksheets with their clients.
+
+### A List of "Simple" Requirements
+
+I started off with a rather simple, or so I thought, list of goals. I wanted it to be reactive so that if a client was working on it with a coach, they could both have it open and it would automatically update, show the coach updates made by the client in real time.
+
+I wanted it to work on mobile devices, because one of the things I had experienced was that I used my iPad a lot and I liked taking my iPad with me off to a nice spot, a garden or a coffee shop, so that if I had an exercise that I wanted to work on, I would like to be able to work on it on my iPad.
+
+I knew that I wanted it to be a web application rather than a native app, because I didn't see a need to pay Apple or the other markets the 30 percent cut that they were asking for. And I knew since I would be taking my mobile device off to perhaps some remote location that I would want it to work offline.
+
+I started writing code, this is in the proverbial nights and weekends, as my side project. Even though the actual data model was quite simple, it's like OK, you have a client and you have a workbook and you have these series of steps and which steps have they done and what information have they filed out.
+
+<%= pullquote "My code to handle the reactive updates was getting incredibly gnarled and complex." %>
+
+Still my code to handle the reactive updates, the real time updates, and then to have to update the screen, was getting incredibly gnarled and complex. And I don't like complex code very much. I like code I can look at and see visually whether it works or not.
+
+### Looking for a Solution
+
+**Sacha:** Were you using a framework or a client-side framework for that?
+
+**Andrew:** Well at this point it was pretty much pure JavaScript. I had looked at some of the other frameworks but hadn't seen anything that seemed like a really good fit. There's always a certain level of complexity and getting up to speed with a framework, and then it's like, well, does this framework...Are the problems that this framework solved problems that I have?
+
+At the beginning, the whole seemed like it'd be fairly simple, so I was starting off and I was using jQuery. That was pretty much it in terms of libraries or frameworks. Then I noticed that my code to do updates was gnarled and complicated and I said, well, there's got to be a reactive framework that will handle this.
+
+<%= figure "interviews/knockout.jpg", "KnockoutJS" %>
+
+I started looking around and there was one, I think it was called [Flapjack](https://github.com/rapheld/flapjack.js), and that was a fairly old one that came from academia, and there was another one called [Knockout](http://knockoutjs.com/). They sort of kind of worked, but not really, and we did some additions and workarounds in order to get them to really work.
+
+I wasn't very happy with the outcome. I said, "This isn't really the improvement that I'm looking for." Then I tried out Meteor and I said, "Oh, look. They seem to actually have this reactive stuff figured out."
+
+**Sacha:** And when was that?
+
+**Andrew:** This was last fall. I had started working on the project maybe early fall, and then I started getting into Meteor late fall, like maybe October or November, sometime in that timeframe.
+
+I said, "Hey, this is great." Meteor in terms of practical usefulness, of saying, OK, I want to do this simple thing, and it actually is simple to do. Meteor seems to be working for that.
+
+<%= pullquote "As long as I'm doing that work anyway, I might as well do it as a smart package.", "right" %>
+
+Now, the next thing was--going down my list of goals for my project--was that I wanted it to work offline. I said, "OK, well if I want to use Meteor and I want my application to work offline, that means I'm going to have to implement an application cache and I'm going to have to implement offline data. As long as I'm doing that work anyway, I might as well do it as a smart package to implement it for Meteor so that other people will be able to use it too."
+
+**Sacha:** Right, and that's what gave us the appcache package, I'm guessing.
+
+**Andrew:** Yes, yes. I started with the appcache package. In some ways that was really the simpler of the effort. Offline data is a bigger, more complicated, needs more work on the algorithm. But the appcache package does have quite a bit of just weird browser behavior. Whenever you write one of these things you're always dealing with cross-browser comparability issues, the kind of thing that jQuery takes care of for you.
+
+Then that was the goal. It's like, OK, you want to do something and then you have all these weird browser issues. The appcache package takes care of them for you. One of the cool things was that there are some issues with integration with Meteor that I didn't really know how to do when I started out.
+
+The main part, which is you list in the application cache file all of your resources, your JavaScript and your CSS and your images, and then those get cached by the browser and you can run your code offline. That part is pretty straightforward.
+
+### Caching & Hot Code Reload
+
+In fact, someone else, before I started working on it, had a sample appcache manifest which did just that. Where it becomes more interesting or technically challenging is how do you then integrate that with, for example, Meteor's hotcode reload function so that if you make a code change and the server pushes out a new version of your application or you're in production and your user opens your application and there's a new version available, then how does that all work correctly when you're using the application cache?
+
+<%= pullquote "It turns out that Meteor already had a facility for handling code reloads.", "left" %>
+
+It turns out that Meteor already had a facility for handling code reloads, where a package can register itself as saying, "I need to know about reloads." And it can then delay the reload until it's done whatever it needs to do in order for a reload to be OK.
+
+An example of where this is used is when the live data package is sending method calls to the server, and then suddenly there is new code available. The live data connection will empty its queue of method calls before allowing the reload to actually happen.
+
+The session data, we'll store session data in either the browser session or local storage. I forget which offhand. But anyway, it saves your session data so that you still have your session data when you pop back from the code reload, so that's another example of a hook.
+
+### Digging in the Meteor Internals
+
+It turned out that the appcache packed was able to hook into the existing API, which was pretty cool, because the reload package says, "OK, we have new code available. Can we do a reload?" And the appcache package says, "Nope, wait a minute, I need to get my new code."
+
+So it triggers an application cache reload in the browser, and the browser goes off and it does its reloading of the application cache in the background. And meanwhile the reload is saying, "OK, can we do a reload yet?" The appcache package keeps saying, "No, no, wait, not yet, not yet, not yet." Until finally the browser completes its code reload, and then the appcache package says, "OK, we can reload now," and then the reload package goes ahead and reloads with the new code.
+
+That all happens faster, because without the appcache package when you do a reload you're waiting with a black screen while the new code loads, but with the appcache it's able to load at first and then reload the page.
+
+**Sacha:** Right, that's very interesting.
+
+<%= pullquote "The Meteor developers have put a lot of work and effort into the internal APIs that will probably be documented someday.", "right" %>
+
+**Andrew:** That was really cool. The Meteor developers have put a lot of work and effort into the API, and not just the public API but also the internal APIs that will probably be documented someday, but at this point they still may be a bit rough or unfinished or whatever and not ready to be publicly documented.
+
+But they still put a lot of effort into getting the pieces to fit together well. It was really cool to see how the appcache package was able to just plug in.
+
+That was the appcache package. Of course, as we know, it's a necessary part of being able to use Meteor on mobile devices and to be able to use Meteor offline. But by itself it only caches the static code of an application. It doesn't help with the offline data.
+
+### When (Not) to Use the Appcache Package
+
+**Sacha:** Yeah, I wanted to talk about that next, because now you have a second project, which is caching the actual data of the application. I saw that you have a paid job on Indiegogo to help you finance the development of this package. Can you tell us little bit about your goals and how this is going?
+
+**Andrew:** Yes. We were going to mention briefly when to use the app cache, so let me just squeeze that in. The goal of the app cache package is that you should always be able to use it. It should be safe to plug it in and to be able to use it.
+
+In Firefox, for example, the app cache package is disabled by default, because Firefox will pop up and ask the user, "This application wants to save its data for offline use. Do you want to allow this or not."
+
+That's not a seamless experience. It may confuse the user if they're not expecting it. So we disabled app cache on Firefox by default, and you can go ahead and enable it, if it's the right thing to do for your application.
+
+Aside from that, we may not necessarily have extensive enough experience to know that the app clash does work perfectly on all browsers and in all scenarios. That's the only caution I would have at this point is, you know, test it. Make sure it's working with your application file and issue, if you're having any problems.
+
+<%= pullquote "The goal is to be able to say, you can plug in the app cache and it will automatically work.", "right" %>
+
+But that's the eventual goal is to be able to say, oh yeah, you can plug in the app cache and it will automatically work.
+
+**Sacha:** Yeah. I think that's really the best kind of improvement, where you don't really have to do anything and can reap the benefits of your hard work.
+
+### The Offline Data Project
+
+**Andrew:** Mm-hmm. The offline data project is similar in the sense that the ultimate goal is that you would simply be able to identify particular collections, as collections that you want to have available on the client when it's offline.
+
+Then there's an enormous amount of work that has to happen behind the scenes, both in terms of the algorithm and in cross-browser compatibility issues, to make that actually happen in a seamless, "Oh, it just works," way.
+
+The first perhaps unexpected thing about offline data, which makes it more complicated than most of us would first expect, is that perhaps the most obvious way of implementing offline data is to take the existing code.
+
+The standard way that media works right now is that each tab, each browser window, open on an application has its own life data connection to the server, and it's independently listening to server subscriptions, and maintaining a collection.
+
+You could say, "Oh, well, we'll just persist that into the browser database," so each tab would have its own copy of the server collections, a mirror of the server collections, in the database, and any local changes that the user had made, that haven't had a chance to get back up to the server yet, because you're offline, you could also store those in the browser database.
+
+### Multi-Tabs Madness
+
+Then once you start running through that scenario, and thinking about how it would actually work, if, for example, the user happened to have more than one tab open, then things start getting messy, and complicated, and you run into weird edge cases. For example, suppose in one browser tab, you make a change, so that gets recorded. Then in another browser tab, you make a change, and that gets recorded.
+
+You close those two browser tabs, and you later come back to the application. You open it again, so now you have a third tab open, and you'd expect, oh, you know, you'd want to see both of your changes.
+
+But if you then go and try to implement that in a sensible way, as an algorithm, what happens is that the second change is now being applied to data which has had the first change already applied to it, which wasn't true originally if you had these two separate tabs that were applying the changes independently.
+
+**Sacha:** Right.
+
+### Syncing Parallel Changes
+
+**Andrew:** In a Meteor method call stub, that stub is able to make decisions. It can have conditionals. It can have if statements based on the current state of the data, which means that now, when you're trying to merge these changes, the method stub can be coming up with different answers. It can be making different changes to the data the second time around, so that gets horribly, horribly messy and confusing.
+
+<%= pullquote "That gets horribly, horribly messy and confusing.", "right" %>
+
+Then there are user experience issues if you're trying to do this model of each tab remaining independent. A user, for example, might have the application open in one tab, enter their extremely important note. "I was just on the phone with someone and I was taking notes, and I typed it into my note-taking application, and I really, really don't want to lose it," right?
+
+**Sacha:** Right.
+
+**Andrew:** Maybe I then go off, and I switch to some other tabs, and I maybe run some other application, and I come back, and I open the application in another tab, and I've forgotten that I have the application already open in that first tab. Well, these tabs, if they're independent, I'm not going to see my note, because that change is still sitting over there in the first tab.
+
+<%= pullquote "It looks like I've lost my important note, and I have my heart attack.", "left" %>
+
+Even though I haven't actually lost my important note, it looks like I've lost my important note, and I have my heart attack, [laughs] as I say, "Oh no. I was talking to so-and-so, and I wrote down this important information that now I don't remember, and it's gone."
+
+### Offline Reactivity 
+
+One way of thinking about this is to say, "Well, if you have changes in different tabs, and you're going to have to merge them eventually, what if you merge them continuously?" Now, while the application is offline, you make a change in one tab and it is reactively shared with other tabs that may be open on the application.
+
+Now, in standard Meteor, when you're online all the time, the tabs are connected through the server, so you do have this reactive experience. You can make a change in one tab, it'll go up to the server, and then it'll come back down to the other tab, so if you switch to the other tab, or you have both windows open at the same time, you will see your reactive changes. All your tabs will be up to date with respect to the changes you're making.
+
+The shared reactive offline data model says that we will also have this experience, the same user experience, when you're offline, which both solves the horrible algorithm problems and it provides a better user experience.
+
+### Technical Challenges
+
+*(Start of Part 2)*
+
+**Sacha:** Is it even possible? How would you do that?
+
+**Andrew:** [laughs] Well, there are kind of both algorithm changes, in that you're now changing a fundamental architectural algorithm of Meteor, how it works in the browser, and then there are browser implementation challenges, in that you figure out the algorithm, "How do you do this?" and then you have to be able to convince the tabs to actually talk to each other, and to do transactions in the browser database, so that you're able to make these updates safely and so on.
+
+<%= pullquote "It turns out to be surprisingly difficult for tabs to be able to talk to each other.", "right" %>
+
+It turns out to actually kind of be surprisingly difficult for tabs to be able to talk to each other. There's no standard HTML5 method that all browsers implement, which is the typical standard way that's designed to be for sending a message from one tab to another.
+
+### Shared Web Workers to the Rescue
+
+There is a brand new standard, which is called a shared web worker, which can be used for cross-tab communication, but that's only implemented in, I don't know, Chrome and maybe Firefox, or something, at the moment.
+
+It does turn out that there is the HTML local storage change event, so that if you store a new key value pair in local storage, other tabs and windows opened on the same application can get a notification, an event, that that key value has changed. This change event is supported in all the browsers that also support the application cache and one flavor or another of a transactional database.
+
+What we can end up doing is we use the local storage key as a channel for cross-browser tab communication, even though the actual message isn't something that we need to store persistently, which is what local storage is normally used for.
+
+<%= pullquote "We need the underlying technology of getting the tabs to talk to each other.", "left" %>
+
+There are few challenges like that. It's like, "OK, so we need the underlying technology of getting the tabs to talk to each other." There are two different flavors of browser databases. There's IndexedDB, which is the new one, which some browsers support, and then there's Web SQL, which is the older one, and there are some browsers that support one, and there are some browsers that support both, and there are other browsers who only support the other one.
+
+In order to store the data persistently in the browser, you end up needing to have two database implementations that you use, depending on which browser you have.
+
+**Sacha:** Wow.
+
+### Managing Meteor Methods
+
+**Andrew:** Now, the algorithm is actually kind of interesting, because the way standard Meteor works is that a change made by the user is represented by a method call. If you use one of the collection modification methods, like you do in `insert`, or you do in `remove`, or you do in `update`, that's represented internally by a method call.
+
+It actually defines methods on the connection just like you do if you use Meteor.methods. When the client goes online, and it talks to the server, and it says, "Hey server, I have some changes," the way it sends those changes is as method calls. It sends it the method name and it sends it the method argument.
+
+Then locally, in the client, it runs the method stub, and the method stub can then modify the local minimongo collection, which is held in memory.
+
+<%= pullquote "Meteor already saves up method calls if you've temporarily lost your Internet connection.", "right" %>
+
+There are a couple of things that we can do here, which, so far, seem to be working. One is, Meteor already saves up method calls if you've temporarily lost your Internet connection, so standard Meteor, this is without using the AppCache, or offline data, or anything. This is just standard, plain, out-of-the-box Meteor.
+
+You open an application. You're online. You temporarily go offline. You've lost your Internet connection. You make some changes, and Meteor will store up both method calls in memory, and then automatically keep trying to reconnect, and when it is able to reconnect, it will then send those method calls up to the server.
+
+One thing we do, which is a fairly simple thing to do, is in offline data, we save those method calls in the browser database. We follow the same algorithm. It's just backed by the database, so that if you close your application and open it later, and you're online, then it pulls those method calls out of the database and is able to send them up to the server.
+
+### Running Stubs Synchronously
+
+Now, the other thing we do is the method stub runs synchronously. It runs all at once. It doesn't cross ticks of the event loop, like something would if it had callbacks. Method stubs can call other method stubs, so you can have nested method stubs, but they're plain, "Call a function, get a return value." There's no asynchronous stuff going on. There are no callbacks going on.
+
+<%= pullquote "We can safely run stubs in tabs, but have them operate on the shared data.", "left" %>
+
+We're actually able to run a method stub inside of a database transaction, and that means that we can safely run stubs in tabs, but have them operate on the shared data, so that when a method stub runs, it's running on the latest updates version of the shared data, and you know that you're not getting weird race conditions going on, or a method stub making decisions based on data which is actually out of date.
+
+We can then use the cross-tab browser communication so that whenever one tab updates the local copy of a document, based on running a method stub, it can then broadcast a message to the other tabs saying, "Hey, this document has changed," or, "This document has now been removed," and the other tabs are able to reactively also update their own local minimongo copy, which then drives the user interface.
+
+### Explaining Synchronization
+
+**Sacha:** OK. Yeah, that's pretty interesting, and it seems like a lot of work, but it will be pretty cool once that's available.
+
+Yeah, and I wonder if it would open the door to maybe making synchronizing multiple databases easier.
+
+**Andrew:** Well, I don't know. What kind of database synchronization would you like to do?
+
+**Sacha:** Well, I'm thinking, one part of the challenge would be to replicate the Mongo database locally, so. Yeah, I'm guessing, like, do you need to maybe only synchronize the new data, or do you just port everything over?
+
+<%= pullquote "When the clients talks to the server, it always talks in terms of method calls.", "right" %>
+
+**Andrew:** Well, when the clients talks to the server, it always talks in terms of method calls. A method call follows the arguments that you've passed to collection update methods. If you call collection.update with a particular ID and increment this field, then pretty much what you're passing in gets wrapped up in a method call and then passed up to the server.
+
+Going from the client to the server, there's no real synchronization going on, in the sense of, oh, I've made some changes to my database and I now want to sync those changes with the server.
+
+### Comparing with MySQL Replication
+
+It's actually a bit more similar if you've ever worked with MySQL replication. There's a replication mode where it's actually recording each command, each SQL statement that you've made. Then it replays those SQL statements on the slaves.
+
+If you have a SQL statement that says, update this field, or increment this field, and the value changes from three to four, in database synchronization, you might take that new value four and send it off to the other servers. But in MySQL statement replication, instead, the other servers get the SQL statement, increment this field.
+
+Because they are, they also start off with three as that value, they apply the same increment operation and they also get four.
+
+Going from the client to the server is similar in that we're not synchronizing data. We're not saying, OK, I've incremented my field in the document that I now have four, so I'm now sending four to the server. That's not what happens.
+
+### Incremental Updates
+
+<%= pullquote "That command is being sent to the server, and the server independently does its own increment of the document.", "right" %>
+
+Instead, you have a command, you're saying, `collection.update(document ID)`, increment field ABC. That command is being sent to the server, and the server independently does its own increment of the document.
+
+Then, in the DDP protocol, the server sends back incremental updates. It sends to the client an update. OK, now, this field in this document has, in fact, changed to four. Or, maybe your update got rejected or someone else already incremented that value, so you might get a reply of, saying, oh no, the value is still three. Or, oh now, the value is five.
+
+In that sense, we don't really need to do anything new in terms of synchronization. We're implementing the same synchronization, DDP protocol as we had before. The changes that now were persisting the data structures used by the algorithm in the database.
+
+If you take a look at the standard `livedata_collection.js` source code file in the live data package, it has some data structures it keeps in memory.
+
+It keeps track of method calls waiting to be sent to the server, and it keeps track of documents that have been modified locally by a method stub in the client, but that we haven't gotten the updated records back from the server yet. Those data structure are pushed into the database so that we don't lose them if we refresh the application or open it in another tab.
+
+Then the other change is that we now run the method stubs in a database transaction so that we're assured that we're running against the very latest copy of the data, and then any changes we make are reactively shared with the other tabs so that they see them too.
+
+### Looking to the Future
+
+**Sacha:** OK. Yeah, that's interesting. I guess my last question is more general. It will be, "What features are you looking forward the most in Meteor in upcoming months or years, and how would you like to see Meteor evolve, basically?"
+
+**Andrew:** Oh my goodness. It's kind of a funny question, because I tend to sort of work on whatever I think is the most...whatever it is that I want most. [laughs]
+
+**Sacha:** I would say besides the offline data and the various caching projects that you're working on, if you have other things you'd like to see.
+
+**Andrew:** Well, I do have [a page in my wiki on GitHub](https://github.com/awwx/misc/wiki/Meteor-Web-Apps-on-Mobile), which is an overview of all known issues of running Meteor on mobile devices.
+
+### Meteor on Mobile
+
+For example, on Android devices, in HTML on mobile devices, they look to see whether you've attached a click handler to an element, and if you have, then it makes the element clickable. You tap on it and it'll highlight, so that you can see that you're clicking on it.
+
+This turns out to interact poorly with the universal events implementation, which is currently in Meteor, and there's an issue for this open in the Meteor issues list, and it's a known issue, so that everything in Android ends up becoming clickable, so that if you're on an Android phone, or an Android tablet, everything you touch gets highlighted as if it were a clickable button or a clickable element.
+
+<%= pullquote "I'm working on offline data first because that seemed to be the hardest thing to do.", "left" %>
+
+I have a good list of all the issues that are currently known. That will be good to get fixed up and working in order to fully support Meteor in mobile. I'm just working on offline data first because that seemed to be the hardest thing to do in the sense that it'll be important to get to these other issues, but if we weren't able to figure out the hardest thing, then, at least personally, from my point of view, in terms of what I want to use Meteor for, there wouldn't be much point in working on the other ones.
+
+**Sacha:** Right. OK. Well, thanks a lot for taking the time to be with us today, and I'll include links to your packages and to your work in the transcript of this interview.
+
+I'm definitely looking forward to seeing what you do with offline data package, because I think that's really going to be something that speeds up the loading of Meteor apps, and that makes them a lot more usable.
+
+**Andrew:** Thank you very much.

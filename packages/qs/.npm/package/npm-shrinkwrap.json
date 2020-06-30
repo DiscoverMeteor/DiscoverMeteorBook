@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "qs": {
+      "version": "0.6.6"
+    }
+  }
+}

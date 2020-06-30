@@ -1,0 +1,227 @@
+---
+title: Matt DeBergalis
+level: full
+slug: matt-debergalis
+---
+
+## An Interview with Matt DeBergalis
+
+<% note do %>
+
+[Download .mp3 (49 mb, 25 min)](https://s3.amazonaws.com/discovermeteor/interviews/DiscoverMeteor_Matt-DeBergalis_Sacha-Greif.mp3)
+
+[Download PDF](https://s3.amazonaws.com/discovermeteor/interviews/DiscoverMeteor_Matt-DeBergalis_Sacha-Greif.pdf)
+
+<% end %>
+
+<%= figure "interviews/matt.jpg", "Matt DeBergalis", "portrait" %>
+
+**Sacha Greif**: Hi. I'm here with Matt DeBergalis from the Meteor core team to talk about Meteor and lots of different topics.
+
+Hi, Matt. Thanks for being here today.
+
+**Matt DeBergalis**: Hi, Sacha. I'm happy to.
+
+**Sacha**: Let's jump right in. My first question is going back a few months. How did Meteor get started? I'm especially curious to know what was the impulse behind creating something like Meteor. It's a pretty ambitious project. I wonder if you woke up one day with the idea for this whole new revolutionary framework in your mind or if it was more of a gradual process?
+
+**Matt**: There's been this shift in how people are writing applications in the last few years, from apps that run in the datacenter, like your classic Ruby on Rails site or a PHP site, toward applications that are written in JavaScript that run inside the browser for the most part or on a mobile device.
+
+<%= pullquote "We didn't come up with this. This has been a trend now for a few years." %>
+
+We didn't come up with this. This has been a trend now for a few years. I think companies like Google with their Gmail and Google+ applications pioneered this. Facebook uses that technique in certain parts of their website. Twitter, for example, was a very early example of a site that was for the most part a client-side application.
+
+### An Impossible Choice
+
+There were three of us that were working together in the summer of 2011. We were part of a startup accelerator called Y Combinator in Silicon Valley.
+
+<%= figure "interviews/meteor.jpg", "The Meteor homepage" %>
+
+What we saw was, lots of our friends who were building websites for their companies were struggling with a problem. The problem was they had a hard choice. They were trying to build websites that felt as good as Google+ and Facebook that had these rich interactive experiences where the browser felt almost like a desktop application. But it turns out that writing those apps takes a lot of time. They were also in a hurry because anybody starting a new product wants to get something out the door quickly and see if it resonates, if they're going in the right direction.
+
+<%= pullquote "They were trying to build websites that felt as good as Google+ and Facebook. But it turns out that writing those apps takes a lot of time.", "right" %>
+
+It was an impossible choice. They were trying to develop applications as quickly as possible, but they felt like building those applications in server-side frameworks like Rails or PHP wouldn't give them that user experience, that really delicious feel that they were looking for.
+
+The reason for that is that there wasn't a standard platform for writing client-side JavaScript applications. If you're Google, you can build one internally. They have. If you're Facebook, you can build one internally. They have. Asana has one and Quora has one. The list goes on. But for most of us, we had to reinvent so many of those components every time.
+
+<%= figure "interviews/asana.jpg", "Asana" %>
+
+Meteor is an off-the-shelf set of tools that let you build a Web application written in JavaScript that mostly runs inside the browser. You can use just one language and one API for everything you're writing instead of having to use something on the server and something else on the client and make the two work well together.
+
+We've built some applications like that in the past. We had a project together around listening to music. Some of us have been at Asana, which of course is one of the pioneers in writing applications inside the browser. We have a lot of technical ideas about the right way to build an application like this that we've folded into Meteor.
+
+But we felt in 2011, it was about time. It was something we were starting to see the developers move toward, so we thought was the right time to build a generic framework to solve those problems in a principled way instead of forcing each developer to have to solve those problems themselves.
+
+**Sacha**: Did you enter Y Combinator with that idea already, or was it more something that came through by seeing other people struggle?
+
+**Matt**: We've thought about something like Meteor in the past, but it's not what we joined Y Combinator to do. It's just that it was so obvious when we looked around the room and saw all those companies working on applications like this that we thought it was the right time for client-side JavaScript.
+
+It was really a strange way to write an app just a few years ago. I think with the rise of Backbone and Angular and Ember and so many of these other technologies that we're seeing and the rise of Node.js on the server, people had started getting comfortable with building your whole application in a language like JavaScript.
+
+<%= pullquote "We grew up thinking of JavaScript as the little toy scripting language that you use to make the buttons move around on the web page." %>
+
+I think for a lot of us, we grew up thinking of JavaScript as the little toy scripting language that you use to make the buttons move around on the web page. But it's actually a remarkably powerful language. It's very elegant in many ways. We think it's a great starting point for building a serious application.
+
+### Meteor vs Rails
+
+**Sacha**: Are there any Y Combinator startups that you know of that are using Meteor now?
+
+**Matt**: There are. I'm trying to think of whether any of them have publicly said so. We should check on that offline and see.
+
+**Sacha**: OK, I can add the links later on. What's interesting is this idea of creating a new way of building Web apps. One of the questions I get a lot is people ask me how Meteor compares to more traditional frameworks like Ruby on Rails, for example.
+
+**Matt**: Oh, sure. Here's how I think about it. The old way of building a Web application, and Ruby on Rails is a great example of this style, is one where the software runs in the datacenter.
+
+So, in a traditional Web application you have a Web browser, you type in a URL. That sends a request to the datacenter for a certain page, and the Rails application draws that page. It actually generates the HTML that you're going to display to the user.
+
+It does that by consulting the database and by maybe talking to other services on the Web. But the job of the Rails app is to put all of that together into an HTML string which it then sends back down the wire over the network connection to your browser, and you see the page.
+
+Then, if you want to do something, if you click on a link and go to a different page, for example, that's a completely new request that gets sent back to the datacenter, and another copy of the Rails application responds to that new request by generating a new page.
+
+So, it's this request response that the browser asks for something. Your applications runs inside the datacenter for a moment, sends back a page displayed on the screen. That's your classic server-side Web application. You can do that with Rails. You could do that with PHP, with Java, with Perl, lots of options.
+
+### A Different Model
+
+Meteor is quite different. In Meteor, the application for the most part is running inside the browser. It's written in JavaScript, and it's a program that runs inside your Web browser. That program can put things on the screen. It can redraw parts of the screen, change what's displayed for the user.
+
+If you click on something, it actually runs code immediately inside the browser to make an action on the screen. So, maybe you click on a person's profile link and it opens up and reveals more information about that person. To do that, it has to go ask the server for pieces of information.
+
+So, one of these applications is constantly chatting back and forth with the server over that network connection. It's asking for all the new posts that someone wrote on Facebook or all the new comments on a blog post or all the new tweets that someone sent.
+
+In a lot of cases, the server may send that data down to the client continuously. It becomes a real-time application whereby the client is always generating new data on the screen, always reacting to what's being presented from the server.
+
+<%= pullquote "In the Rails application, what goes over the wire is an HTML document. In the Meteor application, what goes over the wire is data.", "right" %>
+
+So, it's a very different kind of architecture. In the Rails application, what goes over the wire is an HTML document. In the Meteor application, what goes over the wire is data. It's actual JSON. In a Rails application it's always a request response. So, the Web browser asks for something, the Web server application sends that back.
+
+In the Meteor application, it's streaming. The server is constantly sending changes of data down to the client as things happen, and then the client reacts to those changes by redrawing the screen. So, you get a much richer user experience. The application feels faster because you don't have to wait for that network connection back to the server before you see a new page.
+
+It feels real time because you can watch new information appear on your screen without clicking on something, without reloading the page. So, a ticker or a chat session or a list of people in a common music room or any other scenario like that where you want to show people in real time doing something together.
+
+### Meteor vs Firebase
+
+**Sacha**: Another question I get a lot is for people who maybe have heard about some of these new frameworks is how Meteor compares with other real-time frameworks, for example, [Derby](http://derbyjs.com/) or [Firebase](https://www.firebase.com/), which is a little different.
+
+**Matt**: Firebase is really interesting. It's a real-time database that's provided as a service on the Web. So, Meteor and Firebase can actually be very complementary because a big part of Meteor is this idea of real-time data, of being able to watch documents change over time.
+
+<%= figure "interviews/firebase.jpg", "Firebase" %>
+
+Let's take an example. Suppose we're building something like a Twitter clone in Meteor. Fundamentally when I go to Twitter, what I want to see on my screen are all of the tweets that are written by people I follow. Those tweets are always changing because people are sending out new messages over time.
+
+In Meteor, we have a Web framework that lets you write an application. So, Meteor is a software development kit. You can build your application. You can run it anywhere you like, and it gives you the tools you need to see that information moving in real time.
+
+Something like Firebase is a service that you could use to store real time data. You don't need Firebase to make real-time data work in Meteor. But if you prefer that model, then it's possible to write an application that stores some of that information in Firebase and then uses Meteor to drive the front-end Web application, the part of the application that you interact with.
+
+So, I think what's important is that they're all examples of the shift away from server-side programming which gives you a very slow static website to client-side applications, to these rich, reactive applications that feel more engaging and more usable.
+
+### Meteor vs Derby
+
+**Sacha**: What about Derby? Sorry, I have to ask because it's kind of the "[rival](http://blog.derbyjs.com/2012/04/14/our-take-on-derby-vs-meteor/)" of Meteor. I know it's not really true, but it's, for some reason, the perception that a lot of people have.
+
+**Matt**: I think we agree on most things. They're both frameworks that let you use JavaScript on both the client and the server. They give you the same API on both sides of the wire, and I think that's a really productive writer writing software.
+
+What we've tried to do in Meteor is to make that as approachable and productive as possible for developers. I think developers have fallen in love with Meteor because it's so easy to use, and in the first 15 minutes, you can build a real application. In the first couple of hours, you can flesh out a whole concept for your team and show it off.
+
+<%= pullquote "We keep hearing stories from people who say like, 'My god, I actually built my whole product in a day'.", "right" %>
+
+We keep hearing stories from people who say like, "My god, I actually built my whole product in a day. I thought it would take three weeks, and I actually got it done in a day. Everything I needed to show what I was imagining how the product would work is in here, and it's real time.
+
+I know you went through that exercise when you built Telescope. So, architecturally, there are a lot of similarities. I shouldn't comment specifically on the particular differences. You'll find in Derby, for example, that there's more of a reliance on some of the node modules, whereas in Meteor, we try to create more of an API design for this style of Web development.
+
+There are differences in what kinds of databases you can use and how they work together. But, again, I can't speak precisely to how Derby approaches those problems.
+
+Meteor, for example, is designed so that you can use the native MongoDB API, the API that many of us are familiar with and comfortable with, right from your application. That's a little bit different from how data works in Derby where there's a different API for managing real-time data that's coming out of a database on the server.
+
+### A Gentle Learning Curve
+
+**Sacha**: I think that's a good overview. It's always helpful because the main question when you hear about a new technology is should I invest the time that it takes to get familiar with it. So, even though Meteor is great choice and Derby is a great choice too, it's nice to have a few pointers to help you compare.
+
+When people ask me why they should choose Meteor, my main argument is maybe Meteor is not good for you, but at least you'll know very fast because it only takes a couple of hours to get started.
+
+**Matt**: Yeah, give things a try. What we think about incessantly every single day, every feature we build, every message that you get when you use Meteor, we think about the developer experience. We think about what can we do-how can we work a little bit harder so that the developer has a great experience writing the application-so that things just work.
+
+What that means is that a lot of people sit down to play with it and find that they're able to move very, very quickly. They're able to piece together an application a lot faster than they expected. I think a lot of that is just because we think Web programming is too hard. It shouldn't be that hard, and it doesn't need to be that hard.
+
+<%= pullquote "The first half hour, the first 10 minutes we want to make sure that you can build something real." %>
+
+That doesn't mean you can't write real applications. On the inside, Meteor has some incredibly complex stuff. But the first half hour, the first 10 minutes we want to make sure that you can build something real and then go from there.
+
+**Sacha**: That's exactly what we tried to show in our book like how fast it is to get something out the door and deploy it on meteor.com and just play around with it. I'd like to talk also about how you see Meteor evolving first of all as a framework, the technology side, but also as a business and as a company.
+
+### The Next Steps
+
+Let's talk about the roadmap a little bit. What are the next features on the horizon maybe in a couple of months, in six months, in one year?
+
+**Matt**: Our technical roadmap is online. It's at [roadmap.meteor.com](http://roadmap.meteor.com). It's a Trello board, actually. You can see the different projects that are in progress. You can see what's coming next. You can vote on things that are most important to you. We encourage everyone to do this.
+
+<%= figure "interviews/roadmap.jpg", "The Meteor Roadmap" %>
+
+I think it's a great way to manage a technical road map. I've learned a lot from reading the comments, and seeing the things that people have picked out as being of particular interest.
+
+<%= pullquote "We are working on a forms system so that it's easy to build complex forms.", "right" %>
+
+There are a couple things on the short term horizon for us. One big one is that we are working on a forms system so that it's easy to build complex forms, and a meteor application, forms that have different validations on the fields, that let you save everything at once, or maybe, save as you type, have different behaviors around how they interact with the rest of the database.
+
+That's a project that we've been working on for a while trying to explore different approaches to the problem.
+
+It's a hard problem because in the real time Web application, you have some decisions to make, right? If I'm typing in a form input, and someone in a different browser changes the data, do you want the input element to update right away? Do you want my changes to overwrite their changes?
+
+There's actually a lot of subtle behavior that you have to sort out, and that's the kind of thing that belongs in a framework, that's not something that every application developer should have to muddle through, that's something that the framework should build principled answers to, that everyone can take advantage of.
+
+A couple other things we're doing. We're working on server-side rendering, which is important so that when you first visit a URL, you get a quick HTML page back from the server instead of having to wait to download all the JavaScript and then run it in the browser before you see anything.
+
+We're doing some work on packaging, namespacing, and modularity -- how you build a complex application and where all the files and modules go in an app like that. We're continuing to work on packaging. Recently, we released integration with MPM, and now we're working on a system for managing community written packages alongside the core packages for Meteor.
+
+All of that is designed to get us to 1.0. Meteor 1.0 is our main focus. The goal is to make Meteor the best choice for as many web applications as we can -- something where we can recommend to you that Meteor will solve your problem well, that the APIs are stable, and that you can count on those APIs in the long term as you build your application.
+
+**Sacha**: Can I ask that you don't add too many new features? Because then we'll have to update the book every time.
+
+**Matt**: I think the way to think about this is, we have to work hard so that developers can have it easier. The minute you decided to write a book, you got in the "working hard" camp.
+
+**Sacha**: That's a good point. By the way, I was kidding. Of course, we'll keep the book up to date.
+
+### Open-Source Businesses
+
+The other side of the coin, I guess, is how you see Meteor evolving as a company. For me, it's interesting because there aren't that many companies that are both an open source framework and a business, so I guess the first part of my question would simply be, are there other companies that do that?
+
+**Matt**: Oh, sure. There's a long tradition of companies that sponsor or lead open source projects. MySQL, for example, is the first popular open source database, really. That was led by a company. Another database that's very popular today of course is MongoDB. MongoDB is open source and is written by 10gen, which is the company behind that project.
+
+<%= pullquote "If you're considering writing a web application, you want to know that all the pieces you rely on are going to be around." %>
+
+It's a good model in a lot of ways. I think one of the biggest advantages is that it gives some certainty and some stability to the project. If you're considering writing a web application, you want to know that all the pieces you rely on are going to be around, and that they're going to be vibrant and thriving, and that they'll have the resources behind them to evolve as your needs evolve.
+
+<%= figure "interviews/10gen.jpg", "10gen" %>
+
+I think [10gen](http://10gen.comv) has done a great job of that, for example. They've shown people that if you build your application with MongoDB underneath it, that they have your back. They'll take care of you. For some people, that means buying a support contract or some sort of commercial product. But I think for a lot of us, that just means being comfortable knowing that there are people that go to work every day and their job is to make that database better.
+
+It's really that simple. We can do the same thing here at Meteor. Building a new kind of JavaScript platform is a lot of work. It's a lot of difficult systems engineering work, and the advantage of being able to do that as a company is that we can devote resources to the hard problems that make writing an application in that style difficult today. We'll be able to continue doing that and focus on that and nothing else for the future.
+
+### Making Money
+
+**Sacha**: So do you have any specific plans for how the Meteor as a business will support Meteor as an open source framework?
+
+<%= pullquote "There's going to be a class of companies that want to buy additional software to help them run those applications.", "right" %>
+
+**Matt**: Oh, sure. The two of them really support each other. So there are different models for how to build a company around open source, and they're all good ones. I think what we're going to be doing is, people build larger and larger Meteor apps. There's going to be a class of companies, typically larger companies with operations teams, that want to buy additional software to help them run those applications.
+
+In the Java world, most large Java applications run inside an application server. There's a separate piece of software that you can use to manage your application in the datacenter.
+
+It can run different copies on different virtual machines, as the load changes. It can give you tools to monitor use of application, use of all the resources that it needs. It can integrate with other components in your datacenter, other software that you're using.
+
+A lot of companies don't want to build those things by hand and they don't want to manage those things by hand. Our focus right now is on the open source Meteor SDK, but over time, we'll build some tools to help those companies with those problems.
+
+If you're an open source developer, if you're an independent developer, that probably won't be anything that you would be interested in or would need. You can always use Meteor for free. It's MIT licensed, of course.
+
+Some companies want those things, and they want to be able to pay a company to have the assurance, and the support, of those tools that they're using.
+
+**Sacha**: OK, that concludes my rest of questions, and thanks for taking the time to answer them. I really appreciate that.
+
+**Matt**: Oh, more than happy to.
+
+**Sacha**: I hope, if any of our listeners have questions, that we'll be able to have you back on for a follow up, sometime in the future.
+
+**Matt**: I'm always happy to talk.
+
+**Sacha**: OK, thanks, Matt.
+
+**Matt**: Thanks, Sacha.

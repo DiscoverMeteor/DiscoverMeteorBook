@@ -1,0 +1,56 @@
+---
+title: Allow and Deny
+slug: allow-and-deny
+date: 0008/01/02
+number: 8.5
+level: book
+sidebar: true
+photoUrl: http://www.flickr.com/photos/ikewinski/9475104376/
+photoAuthor: Mike Lewinski
+contents: Learn about Allow and Deny callbacks.|Understand in which order callbacks are called.
+paragraphs: 16
+---
+
+Meteor's security system allows us to control database modification without having to define Methods every time we want to make changes.
+
+Because we needed to do auxiliary tasks like decorating the post with extra properties and taking special action when the post's URL had already been posted, using a specific `post` Method made a lot of sense when creating a post.
+
+On the other hand, we didn't really need to create new Methods for updating and deleting posts. We just needed to check if the user had permission to do these actions, and this was made easy by `allow` and `deny` callbacks. 
+
+Using these callbacks lets us be more declarative about database modifications, and say what kind of updates can be used. The fact that they integrate with the accounts system is an added bonus.
+
+<% note do %>
+
+### Deprecating Allow & Deny
+
+We're keeping this chapter around for reference's sake, but it's important to note that the allow & deny approach is no longer officially recommended, mainly because it makes it very easy to introduce security failures in your code. 
+
+Meteor Methods are a much safer alternative.
+
+<% end %>
+
+### Multiple callbacks
+
+We can define as many `allow` callbacks as required. We just need _at least one_ of them to return `true` for the given change that is happening. So when `Posts.insert` is called in a browser (no matter if it's from our app's client-side code or from the console), the server will in turn call whatever allowed-`insert` checks it can until it finds one that returns true. If it does not find any, it will not allow the insert, and will return a `403` error to the client.
+
+Similarly, we can define one or more `deny` callbacks. If _any_ of those callbacks return `true`, the change will be cancelled and a `403` will be returned. The logic of this means that for a successful `insert`, one or more `allow` `insert` callback as well as _every_ `deny` `insert` callback will be executed.
+
+<%= diagram "allow_deny", "Note: n/e stands for Not Executed" %>
+
+In other words, Meteor moves down the callback list starting first with `deny`, then with `allow`, and executes every callback until one of them returns `true`. 
+
+A practical example of this pattern could be having two `allow()` callbacks, one that checks if a post belongs to the current user, and a second one that checks if the current user has admin rights. If the current user is an admin, this ensures they will be able to update any post, since at least one of those callbacks will return true.
+
+### Latency Compensation
+
+Remember that database mutation Methods (such as `.update()`) are latency compensated, just like any other Method. So for instance, if you try to delete a post that does not belong to you via the browser console, you'll see the post briefly disappear as your local collection loses the document, but then re-appear as the server informs it that, no, in fact the document wasn't deleted.
+
+Of course this behaviour is not a problem when triggered from the console (after all, if users are going to try and mess with data on the console, it's not really your problem what happens in _their_ browser). However, you need to make sure that this doesn't happen in your user interface. For instance, you need to take pains to ensure that you're not showing users delete buttons for documents that they're not allowed to delete.
+
+Thankfully, since you can share permissions code between the client and server (for instance, you could write a library function `canDeletePost(user, post)` and put it in the shared `/lib` directory), doing so usually doesn't require too much extra code.
+
+### Server-side Permissions
+
+Remember that the permission system only applies to database mutations initiated from the client. On the server, Meteor assumes that _all_ operations are permitted.
+
+This means that if you were to write a server-side `deletePost` Meteor Method that could be called from the client, anybody would be able to delete any post. So you probably don't want to do that unless you checked user permissions within that Method as well.

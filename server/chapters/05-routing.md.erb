@@ -1,0 +1,416 @@
+---
+title: Routing
+slug: routing
+date: 0005/01/01
+number: 5
+level: starter
+photoUrl: http://www.flickr.com/photos/ikewinski/9517814403/
+photoAuthor: Mike Lewinski
+contents: Learn about routing in Meteor.|Create post discussion pages, with unique URLs.|Learn how to link to those URLs properly.
+paragraphs: 72
+---
+
+Now that we have a list of posts (which will eventually be user-submitted), we need an individual post page where our users will be able to discuss each post.
+
+We'd like these pages to be accessible via a *permalink*, a URL of the form `http://myapp.com/posts/xyz` (where `xyz` is a MongoDB `_id` identifier) that is unique to each post. 
+
+This means we'll need some kind of *routing* to look at what's inside the browser's URL bar and display the right content accordingly.
+
+### Adding the Iron Router Package
+
+[Iron Router](https://github.com/EventedMind/iron-router) is a routing package that was conceived specifically for Meteor apps. 
+
+Not only does it help with routing (setting up paths), but it can also take care of filters (assigning actions to some of these paths) and even manage subscriptions (control which path has access to what data). (Note: Iron Router was developed in part by *Discover Meteor* co-author Tom Coleman.)
+
+First, let's install the package from Atmosphere: 
+
+~~~bash
+meteor add iron:router
+~~~
+<%= caption "Terminal" %>
+
+This command downloads and installs the Iron Router package into our app, ready to use. Note that you might sometimes need to restart your Meteor app (with `ctrl+c` to kill the process, then `meteor` to start it again) before a package can be used.
+
+<% note do %>
+
+### Router Vocabulary
+
+We'll be touching on a lot of different features of the router in this chapter. If you have some experience with a framework such as Rails, you'll already be familiar with most of these concepts. But if not, here's a quick glossary to bring you up to speed:
+
+- **Routes**: A route is the basic building block of routing. It's basically the set of instructions that tell the app where to go and what to do when it encounters a URL. 
+- **Paths**: A path is a URL within your app. It can be static (`/terms_of_service`) or dynamic (`/posts/xyz`), and even include query parameters (`/search?keyword=meteor`).
+- **Segments**: The different parts of a path, delimited by forward slashes (`/`).
+- **Hooks**: Hooks are actions that you'd like to perform before, after, or even during the routing process. A typical example would be checking if the user has the proper rights before displaying a page. 
+- **Filters**: Filters are simply hooks that you define globally for one or more routes. 
+- **Route Templates**: Each route needs to point to a template. If you don't specify one, the router will look for a template with the same name as the route by default.
+- **Layouts**: You can think of layouts as a “frame” for your content. They contain all the HTML code that wraps the current template, and will remain the same even if the template itself changes.
+- **Controllers**: Sometimes, you'll realize that a lot of your templates are reusing the same parameters. Rather than duplicate your code, you can let all these routes inherit from a single *routing controller* which will contain all the common routing logic. 
+
+For more information about Iron Router, check out [the full documentation on GitHub](https://github.com/EventedMind/iron-router). 
+
+<% end %>
+
+### Routing: Mapping URLs To Templates
+
+So far, we've built our layout using hard-coded template includes (such as `{{>postsList}}`).  So although the content of our app can change, the page's basic structure is always the same: a header, with a list of posts below it.
+
+Iron Router lets us break out of this mold by taking over what renders inside the HTML `<body>` tag. So we won't define that tag's content ourselves, as we would with a regular HTML page. Instead, we will point the router to a special layout template that contains a `{{> yield}}` template helper. 
+
+This `{{> yield}}` helper will define a special dynamic zone that will automatically render whichever template corresponds to the current route (as a convention, we'll designate this special template as the “route template” from now on):
+
+<%= diagram "router-diagram", "Layouts and templates.", "pull-center" %>
+
+We'll start by creating our layout and adding the `{{> yield}}` helper. First, we'll remove our HTML `<body>` tag from `main.html`, and move its contents to their own template, `layout.html` (which we'll place inside a new `client/templates/application` directory). 
+
+Iron Router will take care of embedding our layout into the stripped-down `main.html` template for us, which now looks like this:
+
+~~~html
+<head>
+  <title>Microscope</title>
+</head>
+~~~
+<%= caption "client/main.html" %>
+
+While the newly created `layout.html` will now contain the app's outer layout:
+
+~~~html
+<template name="layout">
+  <div class="container">
+    <header class="navbar navbar-default" role="navigation"> 
+      <div class="navbar-header">
+        <a class="navbar-brand" href="/">Microscope</a>
+      </div>
+    </header>
+    <div id="main">
+      {{> yield}}
+    </div>
+  </div>
+</template>
+~~~
+<%= caption "client/templates/application/layout.html" %>
+
+You'll notice we've replaced the inclusion of the `postsList` template with a call to `yield` helper. 
+
+After this change, our browser tab will show the default Iron Router help page. This is because we haven't told the router what to do with the `/` URL yet, so it simply serves up an empty template.
+
+To begin, we can regain our old behavior by mapping the root `/` URL to the `postsList` template. We'll create a new `router.js` file inside the `/lib` directory at our project's root:
+
+~~~js
+Router.configure({
+  layoutTemplate: 'layout'
+});
+
+Router.route('/', {name: 'postsList'});
+~~~
+<%= caption "lib/router.js"%>
+
+We've done two important things. First, we've told the router to use the `layout` template we just created as the default layout for all routes. 
+
+Second, we've defined a new route named `postsList` and mapped it to the root `/` path. 
+
+<% note do %>
+
+### The `/lib` folder
+
+Anything you put inside the `/lib` folder is guaranteed to load first before anything else in your app (with the possible exception of smart packages). This makes it a great place to put any helper code that needs to be available at all times. 
+
+A bit of warning though: note that since the `/lib` folder is neither inside `/client` or `/server`, this means its contents will be available to both environments.
+
+<% end %>
+
+### Named Routes
+
+Let's clear up a bit of ambiguity here. We named our route `postsList`, but we also have a *template* called `postsList`. So what's going on here?
+
+By default, Iron Router will look for a template with the same name as the route name. In fact, it will even infer the name from the *path* you provide. Although it wouldn't work in this particular case (since our path is `/`), Iron Router would've found the correct template if we had used `http://localhost:3000/postsList` as our path.
+
+You may be wondering why we even need to name our routes in the first place. Naming routes lets us use a few Iron Router features that make it easier to build links inside our app. The most useful one is the `{{pathFor}}` Spacebars helper,  which returns the URL path component of any route.
+
+We want our main home link to point us back to the posts list, so instead of specifying a static `/` URL, we can also use the Spacebars helper. The end result will be the same, but this gives us more flexibility since the helper will always output the right URL even if we later change the route's path in the router. 
+
+~~~html
+<header class="navbar navbar-default" role="navigation"> 
+  <div class="navbar-header">
+    <a class="navbar-brand" href="{{pathFor 'postsList'}}">Microscope</a>
+  </div>
+</header>
+
+//...
+~~~
+<%= caption "client/templates/application/layout.html"%>
+<%= highlight "3" %>
+
+<%= commit "5-1", "Very basic routing." %>
+
+### Waiting On Data
+
+If you deploy the current version of the app (or launch the web instance using the link above), you'll notice that the list appears empty for a few moments before the posts appear. This is because when the page first loads, there are no posts to display until the `posts` subscription is done grabbing the post data from the server.
+
+It would be a much better user experience to provide some visual feedback that something is happening, and that the user should wait a moment.
+
+Luckily, Iron Router gives us an easy way to do just that: we can ask it to *wait on* the subscription. 
+
+We start by moving our `posts` subscription from `main.js` to the router:
+
+~~~js
+Router.configure({
+  layoutTemplate: 'layout',
+  waitOn: function() { return Meteor.subscribe('posts'); }
+});
+
+Router.route('/', {name: 'postsList'});
+~~~
+<%= caption "lib/router.js" %>
+<%= highlight "3" %>
+
+What we are saying here is that for *every* route on the site (we only have one right now, but soon we'll have more!), we want to subscribe to the `posts` subscription.
+
+The key difference between this and what we had before (when the subscription was in `main.js`, which should now be empty and can be removed), is that now Iron Router knows when the route is "ready" -- that is, when the route has the data it needs to render.
+
+### Get A Load Of This
+
+Knowing when the `postsList` route is ready doesn't do us much good if we're just going to display an empty template anyway. Thankfully, Iron Router comes with a built-in way to delay showing a template until the route calling it is ready, and show a `loading` template instead:
+
+~~~js
+Router.configure({
+  layoutTemplate: 'layout',
+  loadingTemplate: 'loading',
+  waitOn: function() { return Meteor.subscribe('posts'); }
+});
+
+Router.route('/', {name: 'postsList'});
+~~~
+<%= caption "lib/router.js" %>
+<%= highlight "3,4" %>
+
+Note that since we're defining our `waitOn` function globally at the router level, this sequence will only happen once when a user first accesses your app. After that, the data will already be loaded in the browser's memory and the router won't need to wait for it again. 
+
+The final piece of the puzzle is the actual loading template. We'll use the `spin` package to create a nice animated loading spinner. Add it with `meteor add sacha:spin`, and then create the `loading` template as follows in the `client/templates/includes` directory:
+
+~~~html
+<template name="loading">
+  {{>spinner}}
+</template>
+~~~
+<%= caption "client/templates/includes/loading.html" %>
+
+Note that `{{>spinner}}` is a partial contained in the `spin` package. Even though this partial comes from “outside” our app, we can include it just like any other template. 
+
+It's usually a good idea to wait on your subscriptions, not just for the user experience, but also because it means you can safely assume that data will always be available from within a template. This eliminates the need to deal with templates being rendered before their underlying data is available, which often requires tricky workarounds.
+
+<%= commit "5-2", "Wait on the post subscription." %>
+
+<% note do %>
+
+### A First Glance At Reactivity
+
+Reactivity is a core part of Meteor, and although we've yet to really touch on it, our loading template gives us a first glance at this concept. 
+
+Redirecting to a loading template if data isn't loaded yet is all well and good, but how does the router know when to redirect the user *back* to the right page once the data comes through?
+
+For now, let's just say that this is exactly where reactivity comes in, and leave it at this. But don't worry, you'll learn more about it very soon!
+
+<% end %>
+
+### Routing To A Specific Post
+
+Now that we've seen how to route to the `postsList` template, let's set up a route to display the details of a single post. 
+
+There's just one catch: we can't go ahead and define one route per post, since there might be hundreds of them. So we'll need to set up a single *dynamic* route, and make that route display any post we want. 
+
+To start with, we'll create a new template that simply renders the same post template that we used earlier in the list of posts.
+
+~~~html
+<template name="postPage">
+  <div class="post-page page">
+    {{> postItem}}
+  </div>
+</template>
+~~~
+<%= caption "client/templates/posts/post_page.html" %>
+
+We'll add more elements to this template later on (such as comments), but for now it'll simply serve as a shell for our `{{> postItem}}` include. 
+
+We are going to create another named route, this time mapping URL paths of the form `/posts/<ID>` to the `postPage` template:
+
+~~~js
+Router.configure({
+  layoutTemplate: 'layout',
+  loadingTemplate: 'loading',
+  waitOn: function() { return Meteor.subscribe('posts'); }
+});
+
+Router.route('/', {name: 'postsList'});
+Router.route('/posts/:_id', {
+  name: 'postPage'
+});
+~~~
+<%= caption "lib/router.js" %>
+<%= highlight "8~10" %>
+
+The special `:_id` syntax tells the router two things: first, to match any route of the form `/posts/xyz/`, where “xyz” can be anything at all. Second, to put whatever it finds in this “xyz” spot inside an `_id` property in the router's `params` array. 
+
+Note that we're only using `_id` for convenience's sake here. The router has no way of knowing if you're passing it an actual `_id`, or just some random string of characters. 
+
+We're now routing to the correct template, but we're still missing something: the router knows the `_id` of the post we'd like to display, but the template still has no clue. So how do we bridge that gap?
+
+Thankfully, the router has a clever built-in solution: it lets you specify a template's **data context**. You can think of the data context as the filling inside a delicious cake made of templates and layouts. Simply put, it's what you fill up your template with:
+
+<%= diagram "router-diagram-2", "The data context.", "pull-center" %>
+
+In our case, we can get the proper data context by looking for our post based on the `_id` we got from the URL: 
+
+~~~js
+Router.configure({
+  layoutTemplate: 'layout',
+  loadingTemplate: 'loading',
+  waitOn: function() { return Meteor.subscribe('posts'); }
+});
+
+Router.route('/', {name: 'postsList'});
+Router.route('/posts/:_id', {
+  name: 'postPage',
+  data: function() { return Posts.findOne(this.params._id); }
+});
+~~~
+<%= caption "lib/router.js" %>
+<%= highlight "10" %>
+
+So every time a user accesses this route, we'll find the appropriate post and pass it to the template. Remember that `findOne` returns a single post that matches a query, and that providing just an `id` as an argument is a shorthand for `{_id: id}`. 
+
+Within the `data` function for a route, `this` corresponds to the currently matched route, and we can use `this.params` to access the named parts of the route (which we indicated by prefixing them with `:` inside our `path`).
+
+<% note do %>
+
+### More About Data Contexts
+
+By setting a template's *data context*, you can control the value of `this` inside template helpers.
+
+This is usually done implicitly with the `{{#each}}` iterator, which automatically sets the data context of each iteration to the item currently being iterated on:
+
+~~~html
+{{#each widgets}}
+  {{> widgetItem}}
+{{/each}}
+~~~
+
+But we can also do it explicitly using `{{#with}}`, which simply says "take this object, and apply the following template to it". For example, we can write:
+
+~~~html
+{{#with myWidget}}
+  {{> widgetPage}}
+{{/with}}
+~~~
+
+It turns out you can achieve the same result by passing the context as an *argument* to the template call. So the previous block of code can be rewritten as:
+
+~~~js
+{{> widgetPage myWidget}}
+~~~
+
+For an in-depth exploration of data contexts we suggest [reading our blog post](https://www.discovermeteor.com/blog/a-guide-to-meteor-templates-data-contexts/) on the topic. 
+
+<% end %>
+
+### Using a Dynamic Named Route Helper
+
+Finally, we'll create a new “Discuss” button that will link to our individual post page. Again, we could do something like `<a href="/posts/{{_id}}">`, but using a route helper is just more reliable. 
+
+We've named the post route `postPage`, so we can use a `{{pathFor 'postPage'}}` helper:
+
+~~~html
+<template name="postItem">
+  <div class="post">
+    <div class="post-content">
+      <h3><a href="{{url}}">{{title}}</a><span>{{domain}}</span></h3>
+    </div>
+    <a href="{{pathFor 'postPage'}}" class="discuss btn btn-default">Discuss</a>
+  </div>
+</template>
+~~~
+<%= caption "client/templates/posts/post_item.html"%>
+<%= highlight "6" %>
+<%= commit "5-3", "Routing to a single post page." %>
+
+But wait, how exactly does the router know where to get the `xyz` part in `/posts/xyz`? After all, we're not passing it any `_id`. 
+
+It turns out that Iron Router is smart enough to figure it out by itself. We're telling the router to use the `postPage` route, and the router knows that this route requires an `_id` of some kind (since that's how we defined our `path`) .
+
+So the router will look for this `_id` in the most logical place available: the data context of the `{{pathFor 'postPage'}}` helper, in other words `this`. And it so happens that our `this` corresponds to a post, which (surprise!) does possess an `_id` property. 
+
+Alternatively, you can also explicitly tell the router where you'd like it to look for the `_id` property, by passing a second argument to the helper (i.e. `{{pathFor 'postPage' someOtherPost}}`). A practical use of this pattern would be getting the link to the previous or next posts in a list, for example. 
+
+To see if it works correctly, browse to the post list and click on one of the 'Discuss' links. You should see something like this:
+
+<%= screenshot "5-2", "A single post page." %>
+
+<% note do %>
+
+### HTML5 pushState
+
+One thing to realize is that these URL changes are happening using [HTML5 pushState](https://developer.mozilla.org/en-US/docs/Web/Guide/API/DOM/Manipulating_the_browser_history?redirectlocale=en-US&redirectslug=Web%2FGuide%2FDOM%2FManipulating_the_browser_history). 
+
+The Router picks up clicks on URLs that are internal to the site, and prevents the browser from browsing away from the app, instead just making the necessary changes to the app's state. 
+
+If everything is working correctly the page should change instantaneously. In fact, sometimes things change so fast that some kind of page transition might be needed. This is outside of the scope of this chapter, but an interesting topic nonetheless.
+
+<% end %>
+
+### Post Not Found
+
+Let's not forget that routing works both ways: it can change the URL when we visit a page, but it can also display a new page when we change *the URL*. So we need to figure out what happens if somebody enters the *wrong* URL.
+
+Thankfully, Iron Router takes care of this for us through the `notFoundTemplate` option.
+
+First, we'll set up a new template to show a simple 404 error message:
+
+~~~html
+<template name="notFound">
+  <div class="not-found page jumbotron">
+    <h2>404</h2>
+    <p>Sorry, we couldn't find a page at this address.</p>
+  </div>
+</template>
+~~~
+<%= caption "client/templates/application/not_found.html"%>
+
+Then, we'll simply point Iron Router to this template:
+
+~~~js
+Router.configure({
+  layoutTemplate: 'layout',
+  loadingTemplate: 'loading',
+  notFoundTemplate: 'notFound',
+  waitOn: function() { return Meteor.subscribe('posts'); }
+});
+
+//...
+ ~~~
+<%= caption "lib/router.js"%>
+<%= highlight "4" %>
+
+To test out your new error page, you can try accessing a random URL like `http://localhost:3000/nothing-here`. 
+
+But wait, what if someone enters a URL of the form `http://localhost:3000/posts/xyz`, where `xyz` is *not* a valid post `_id`? This is still a valid route, just not one that points to any data.
+
+Thankfully, Iron Router is smart enough to figure this out if we just add a special `dataNotFound` hook at the end of `router.js`:
+
+~~~js
+//...
+
+Router.onBeforeAction('dataNotFound', {only: 'postPage'});
+~~~
+<%= caption "lib/router.js"%>
+<%= highlight "4" %>
+
+This tells Iron Router to show the “not found” page not just for invalid routes but also for the `postPage` route,  whenever the `data` function returns a “falsy” (i.e. `null`, `false`, `undefined`, or empty) object.
+
+<%= commit "5-4", "Added not found template." %>
+
+<% note do %>
+
+### Why “Iron”?
+
+You might be wondering about the story behind the name “Iron Router”. According to Iron Router author Chris Mather, it comes from the fact that meteors are composed primarily of iron.
+
+<% end %>

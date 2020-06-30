@@ -1,0 +1,361 @@
+---
+title: Animations
+slug: animations
+date: 0014/01/01
+number: 14
+level: book
+photoUrl: http://www.flickr.com/photos/ikewinski/8377615133/
+photoAuthor: Mike Lewinski
+contents: See what happens behind the scenes when Meteor swaps two DOM elements.|Learn how to animate the reordering of posts.|Learn how to animate the insertion and deletion of posts.|Learn to animate transitions between two pages.
+paragraphs: 58
+---
+
+We now have real-time voting, scoring, and ranking. However, this leads to a jarring, erratic user experience as posts jump around on the homepage. We'll use animations to smooth this over.
+
+### Introducing `_uihooks`
+
+`_uihooks` is a relatively new, and as yet undocumented feature of Blaze. As its name indicates, it gives access to hooks that can be triggered whenever elements are inserted, removed, or animated. 
+
+The full list of hooks is as follow:
+
+- `insertElement`: called whenever a new element is inserted.
+- `moveElement`: called when an element changes position.
+- `removeElement`: called when an element is removed.
+
+Once defined, these hooks will *replace* Meteor's default behavior. In other words, instead of inserting, moving, or removing elements, Meteor will now use whatever behavior we specify – and it'll be up to us to make sure this behavior actually works! 
+
+### Meteor & the DOM
+
+Before we can start the fun part (making things move around), we need to understand how Meteor interacts with the DOM (Document Object Model -- the collection of HTML elements that make up a page's contents).
+
+The crucial point to keep in mind is that elements in the DOM cannot really be “moved”; however, they can be deleted and created (note that this is a limitation of the DOM itself, not of Meteor). So to give the illusion of elements A and B switching place, Meteor will actually delete element B and insert a brand new copy (B') before element A. 
+
+This makes animation a little tricky, as we can't just animate B to move it to a new position, because B will be gone as soon as Meteor re-renders the page (which happens instantly thanks to reactivity). Don't worry though, we'll find a way. 
+
+### The Soviet Runner
+
+But first, a story. 
+
+The year was 1980, at the height of the Cold War. The Olympics were being held in Moscow, and the Soviets were determined to win the 100 meters dash at any cost. So a group of brilliant Soviet scientists equipped one of their athletes with a teleporter, and as soon as the gunshot was heard the runner disappeared in a flash, and was instantly reinserted into the space-time continuum right at the finish line. 
+
+Thankfully, race officials noticed the infraction immediately, and the athlete had no choice but to teleport back to the starting blocks, before being allowed to participate in the race by running like everybody else. 
+
+My historical sources aren't that reliable, so you should take that story with a grain of salt. But do try and keep the "Soviet runner with a teleporter" analogy in mind as we go through this chapter.
+
+### Breaking It Down
+
+When Meteor receives an update and reactively modifies the DOM, our post will be instantly teleported to its final position, just like the soviet runner. But whether at the Olympics or in our app, we can't just have stuff teleporting around. So we’ll teleport the element back to the “starting blocks” and make it “run” (in other words, animate it) up to the finish line.
+
+So to switch posts A and B (positioned in positions p1 and p2, respectively), we would go through the following steps:
+
+1. Delete B
+2. Create B' before A in the DOM
+3. Teleport B' to p2
+4. Teleport A to p1
+5. Animate A to p2
+6. Animate B' to p1
+
+The following diagram explains these steps in more detail:
+
+<%= diagram "animation_diagram", "Switching two posts", "pull-center" %>
+
+Again, in steps 3 and 4 we're not *animating* A and B' to their positions but “teleporting” them instantly. Since this is instantaneous, it will give the illusion that B was never deleted, and properly position both elements to be animated back to their new position.
+
+By default, Meteor takes care of steps 1 & 2, and reimplementing them ourselves will be easy enough. And in steps 5 and 6 all we're doing is moving the elements to their proper spot. So the only part we really need to worry about is steps 3 and 4, i.e. sending the elements to the animation's starting point. 
+
+### CSS Positioning
+
+To animate the posts being reordered around the page, we'll have to venture into CSS territory. A quick review of CSS positioning might be in order. 
+
+Elements on a page use **static** positioning by default. Statically positioned elements just fit within the flow of the page, and their coordinates on the screen cannot be changed or animated. 
+
+**Relative** positioning on the other hand means that the element also fits in the flow of the page, but can be positioned *relative to its original position*. 
+
+**Absolute** positioning goes one step further and lets you give  the element specific x/y coordinates relative to the **document** or **the first absolute or relative-positioned parent element**. 
+
+We'll use relative positioning to animate our posts. We've already taken care of the CSS for you, but if you needed to do it yourself all you would do is add this code to your stylesheet:
+
+~~~css
+.post{
+  position:relative;
+}
+.post.animate{
+  transition:all 300ms 0ms ease-in;
+}
+~~~
+<%= caption "client/stylesheets/style.css" %>
+
+Note that we only animate posts that have the CSS class `.animate`. This makes it possible to add and remove that class to control when animations should or shouldn't occur. 
+
+This makes steps 5 and 6 quite easy: all we need to do is reset `top` to `0px` (its default value) and our posts will slide back to their "normal" position. 
+
+So basically, our only challenge is figuring where to animate them *from* (steps 3 and 4) relative to their new position. In other words, how much to offset them. But that's not very hard either: the correct offset is simply a post's previous position minus its new one. 
+
+### Implementing `_uihooks`
+
+Now that we understand the various factors at play in animating a list of items, we're ready to start implementing the animation. We'll first need to wrap our list of posts in a new `.wrapper` container element:
+
+```html
+<template name="postsList">
+  <div class="posts page">
+    <div class="wrapper">
+      {{#each posts}}
+        {{> postItem}}
+      {{/each}}
+    </div>
+    
+    {{#if nextPath}}
+      <a class="load-more" href="{{nextPath}}">Load more</a>
+    {{else}}
+      {{#unless ready}}
+        {{> spinner}}
+      {{/unless}}
+    {{/if}}
+  </div>
+</template>
+```
+<%= caption "client/templates/posts/posts_list.html" %>
+<%= highlight "3,7" %>
+
+Before we do anything else, let's review our posts' current behavior, *without* animations:
+
+<%= gifscreenshot "14-1", "The non-animated post list." %>
+
+Let's bring in `_uihooks`. We'll select that `.wrapper` div inside the template's `onRendered` callback, and define a `moveElement` hook. 
+
+```js
+Template.postsList.onRendered(function () {
+  this.find('.wrapper')._uihooks = {
+    moveElement: function (node, next) {
+      // do nothing for now
+    }
+  }
+});
+```
+<%= caption "client/templates/posts/posts_list.js" %>
+<%= highlight "1~7" %>
+
+The `moveElement` function we just defined will be called whenever an element's position changes *instead* of Blaze's default behavior. And since the function is empty, this means *nothing will happen*. 
+
+Go ahead and try it: open up the “Best“ view and upvote a few posts: the ordering won't change until you force a rerender (either by reloading the page or switching routes).
+
+<%= gifscreenshot "14-2", "An empty moveElement callback: nothing happens" %>
+
+We've ascertained that `_uihooks` works. Now let's make it animate!
+
+### Animating Posts Reordering
+
+The `moveElement` hook takes two arguments: `node` and `next`. 
+
+- `node` is the element currently being moved to a new position in the DOM. 
+- `next` is the element right *after* the new position that `node` is being moved to. 
+
+Knowing this, we can work out the following animation process (feel free to refer back to the “Soviet Runner” example if you need to refresh your memory). When a new position change is detected, we'll:
+
+1. Insert `node` before `next` (in other words, the default behavior that will happen if we don't specify any `moveElement` hook at all).
+2. Move `node` back to its original position.
+3. Nudge every element between `node` and `next` to make room for `node`.
+4. Animate all elements back to their new default position.
+
+We'll do all this through the magic of [jQuery](http://jquery.com), by far the best DOM manipulation library out there. jQuery in general is out of the scope of this book, but let's quickly go over the handful of jQuery methods we'll use:
+
+- [`$()`](http://api.jquery.com/jQuery/): wrap any DOM element with the jQuery method to make it a jQuery object.
+- [`offset()`](http://api.jquery.com/offset/): retrieve the current position of an element relative to *the document*, and returns an object containing `top` and `left` properties.
+- [`outerHeight()`](http://api.jquery.com/outerHeight/): get the “outer” height (including padding and optionally margin) of an element.
+- [`nextUntil(selector)`](http://api.jquery.com/nextUntil/): get all elements after the target element up to (but not including) the element matched by `selector`.
+- [`insertBefore(selector)`](http://api.jquery.com/insertBefore/): insert an element before the one matched by `selector`. 
+- [`removeClass(class)`](http://api.jquery.com/removeClass/): remove the `class` CSS class, if present on the element.
+- [`css(propertyName, propertyValue)`](http://api.jquery.com/css/): set the `propertyName` CSS property to `propertyValue`. 
+- [`height()`](http://api.jquery.com/height/): get an element's height. 
+- [`addClass(class)`](http://api.jquery.com/addClass/): add the `class` CSS class to an element.
+
+```js
+Template.postsList.onRendered(function () {
+  this.find('.wrapper')._uihooks = {
+    moveElement: function (node, next) {
+      var $node = $(node), $next = $(next);
+      var oldTop = $node.offset().top;
+      var height = $node.outerHeight(true);
+      
+      // find all the elements between next and node
+      var $inBetween = $next.nextUntil(node);
+      if ($inBetween.length === 0)
+        $inBetween = $node.nextUntil(next);
+      
+      // now put node in place
+      $node.insertBefore(next);
+      
+      // measure new top
+      var newTop = $node.offset().top;
+      
+      // move node *back* to where it was before
+      $node
+        .removeClass('animate')
+        .css('top', oldTop - newTop);
+      
+      // push every other element down (or up) to put them back
+      $inBetween
+        .removeClass('animate')
+        .css('top', oldTop < newTop ? height : -1 * height)
+        
+      
+      // force a redraw
+      $node.offset();
+      
+      // reset everything to 0, animated
+      $node.addClass('animate').css('top', 0);
+      $inBetween.addClass('animate').css('top', 0);
+    }
+  }
+});
+```
+<%= caption "client/templates/posts/posts_list.js" %>
+
+A few notes:
+
+- We calculate `$node`'s height so we know by how much to offset the `$inBetween` elements. We use `outerHeight(true)` so that margin and padding are factored in the calculation.
+- We don't know if `next` comes after or before `node` when going down the DOM. So we check both configurations when defining `$inBetween`. 
+- In order to switch between “teleporting” and “animating” elements, we're simply toggling the `animate` CSS class on and off (the actual animation being defined in the app's CSS code). 
+- Since we're using relative positioning, we can always reset any element's `top` property back to 0 to bring it back to where it's supposed to be. 
+
+<% note do %>
+
+### Forcing The Redraw
+
+You're probably wondering about that `$node.offset()` line. Why are we asking for `$node`'s position if we're not going to do anything with it? 
+
+Think of it this way: if you told a perfectly logical android to run north for 5 kilometers, and then once that's done run back to its starting point, it would probably deduce that since it will end up in the same place it might as well save its energy and not run at all. 
+
+So in order to ensure that our android runs during the entire 10 kilometers, we'll ask it to measure its coordinates at the 5k mark before turning around. 
+
+The browser works in a similar way: if we just gave both the `css('top', oldTop - newTop)` and `css('top', 0)` instructions simultaneously, the new coordinates would simply replace the old ones and nothing would happen. If we want to actually see our animation, we need to force the browser to redraw the element after the first position change.
+
+And a simple way to force that redraw is asking the browser to check the element's `offset` -- it can't know what that is until it's drawn the element again. 
+
+<% end %>
+
+Let's give it a spin. Go back to the “Best” view and start upvoting: you should now see our posts glide up and down with ballet-like grace!
+
+<%= gifscreenshot "14-3", "Animated reordering" %>
+
+<%= commit "14-1", "Added post reordering animation." %>
+
+### Can't Fade Me
+
+Now that we've taken care of the tricky reordering sequence, animating posts being inserted and removed will be a piece of cake!
+
+First, we'll fade in new posts (note that for simplicity's sake, we're using JavaScript animations this time):
+
+```js
+Template.postsList.onRendered(function () {
+  this.find('.wrapper')._uihooks = {
+    insertElement: function (node, next) {
+      $(node)
+        .hide()
+        .insertBefore(next)
+        .fadeIn();
+    },
+    moveElement: function (node, next) {
+      //...
+    }
+  }
+});
+```
+<%= caption "client/templates/posts/posts_list.js" %>
+<%= highlight "3~7" %>
+
+To get a clear picture of the result, we can test out new animation by inserting a post via the console with:
+
+```js
+Meteor.call('postInsert', {url: 'http://apple.com', title: 'Testing Animations'})
+```
+
+<%= gifscreenshot "14-4", "Fading in new posts" %>
+
+And then we'll fade out deleted posts:
+
+```js
+Template.postsList.onRendered(function () {
+  this.find('.wrapper')._uihooks = {
+    insertElement: function (node, next) {
+      $(node)
+        .hide()
+        .insertBefore(next)
+        .fadeIn();
+    },
+    moveElement: function (node, next) {
+      //...
+    },
+    removeElement: function(node) {
+      $(node).fadeOut(function() {
+        $(this).remove();
+      });
+    }
+  }
+});
+```
+<%= caption "client/templates/posts/posts_list.js" %>
+<%= highlight "12~16" %>
+
+Again, just delete a post via the console (using `Posts.remove('somePostId')`) to see the effect in action.
+
+<%= gifscreenshot "14-5", "Fading out deleted posts" %>
+
+<%= commit "14-2", "Fade items in when they are drawn." %>
+
+### Page Transitions
+
+So far we've animated elements *within* a page. But what if we wanted to add animated transitions *in-between* pages?
+
+Page transitions are Iron Router's job. You click a link, and the content of the `{{> yield}}` helper in `layout.html` are automatically replaced. 
+
+It turns out that just like we overrode Blaze's default behavior for our post list, we can do the same thing for that `{{> yield}}` to add a fade transition in between routes!
+
+If we want to fade pages in and out, we'll have to make sure they're displayed one on top of the other. We do that by using `position:absolute` on the `.page` container div that wraps every page template. 
+
+We don't want our pages to be absolutely positioned relative to the window though, since they would overlap the app's header. So we give `position:relative` to the containing `#main` div so that the `.page` div's `position:absolute` takes its origin from `#main`. 
+
+To save time, we've already added the necessary CSS code to `style.css`:
+
+```css
+//...
+
+#main{
+  position: relative;
+}
+.page{
+  position: absolute;
+  top: 0px;
+  width: 100%;
+}
+
+//...
+```
+<%= caption "client/stylesheets/style.css" %>
+
+It's time to add the page fade code. It should look familiar, since it's the exact same code we already used for the post insertion and removal:
+
+```js
+Template.layout.onRendered(function() {
+  this.find('#main')._uihooks = {
+    insertElement: function(node, next) {
+      $(node)
+        .hide()
+        .insertBefore(next)
+        .fadeIn();
+    },
+    removeElement: function(node) {
+      $(node).fadeOut(function() {
+        $(this).remove();
+      });
+    }
+  }
+});
+```
+<%= caption "client/templates/application/layout.js" %>
+
+<%= gifscreenshot "14-6", "Transitioning in-between pages with a fade" %>
+
+<%= commit "14-3", "Transition between pages by fading." %>
+
+We've just seen a few patterns for animating elements within your Meteor app. While this is not an exhaustive list by any means, hopefully it will provide a foundation on which to build more elaborate transitions.

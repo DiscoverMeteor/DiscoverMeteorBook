@@ -1,0 +1,8 @@
+{
+  "name": "static-collections",
+  "description": "Load static files into collections",
+  "homepage": "https://github.com/DiscoverMeteor/static-collections",
+  "author": "Sacha Greif & Tom Coleman",
+  "version": "0.0.1",
+  "git": "https://github.com/DiscoverMeteor/static-collections.git"
+}

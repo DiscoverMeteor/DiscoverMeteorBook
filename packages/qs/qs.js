@@ -1,0 +1,1 @@
+qs = Npm.require('qs');

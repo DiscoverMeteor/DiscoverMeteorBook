@@ -1,0 +1,235 @@
+---
+title: Creating a Meteor Package
+slug: creating-a-meteor-package
+date: 0009/01/02
+number: 9.5
+level: book
+sidebar: true
+photoUrl: http://www.flickr.com/photos/rxb/7779426142/
+photoAuthor: Richard
+contents: Write a local in-app package.|Write some tests for your package.|Release your package on Atmosphere.
+paragraphs: 22
+---
+
+We've built a re-usable pattern with our errors work, so why not package it up into a smart package and share it with the rest of the Meteor community?
+
+To get started, we need to make sure we have a Meteor Developer account. You can go claim yours at [meteor.com](meteor.com), but there's a good chance you already did so when you signed up for the book! In either case, you should figure out what your username is, as we'll make heavy use of it in this chapter. 
+
+We'll use the username `tmeasday` in this chapter -- you can substitute your own in for it.
+
+First we need to create some structure for our package to reside in. We can use the `meteor create --package tmeasday:errors` command to do so. Note that Meteor has created a folder named `packages/tmeasday:errors/`, with some files inside. We'll start by editing `package.js`, the file that informs Meteor of how the package should be used, and which objects or functions it needs to export.
+
+~~~js
+Package.describe({
+  name: "tmeasday:errors",
+  summary: "A pattern to display application errors to the user",
+  version: "1.0.0",
+  documentation: null
+});
+
+Package.onUse(function (api, where) {
+  api.versionsFrom('0.9.0');
+  
+  api.use(['minimongo', 'mongo-livedata', 'templating'], 'client');
+
+  api.addFiles(['errors.js', 'errors_list.html', 'errors_list.js'], 'client');
+  
+  if (api.export) 
+    api.export('Errors');
+});
+~~~
+<%= caption "packages/tmeasday:errors/package.js" %>
+
+When developing a package for real-world use, it's good practice to fill the `Package.describe` block's `git` section with your repo's Git URL (such as `https://github.com/tmeasday/meteor-errors.git`). This way users can read the source code, and (assuming you are using GitHub) your package's readme will appear on Atmosphere.
+
+Let's add three files to the package. (We can remove the boilerplate that Meteor put down) We can pull these files from Microscope without much change except for some proper namespacing and a slightly cleaner API:
+
+~~~js
+Errors = {
+  // Local (client-only) collection
+  collection: new Mongo.Collection(null),
+  
+  throw: function(message) {
+    Errors.collection.insert({message: message, seen: false})
+  }
+};
+~~~
+<%= caption "packages/tmeasday:errors/errors.js" %>
+
+~~~html
+<template name="meteorErrors">
+  <div class="errors">
+    {{#each errors}}
+      {{> meteorError}}
+    {{/each}}
+  </div>
+</template>
+
+<template name="meteorError">
+  <div class="alert alert-danger" role="alert">
+    <button type="button" class="close" data-dismiss="alert">&times;</button>
+    {{message}}
+  </div>
+</template>
+~~~
+<%= caption "packages/tmeasday:errors/errors_list.html" %>
+
+~~~js
+Template.meteorErrors.helpers({
+  errors: function() {
+    return Errors.collection.find();
+  }
+});
+
+Template.meteorError.onRendered(function() {
+  var error = this.data;
+  Meteor.setTimeout(function () {
+    Errors.collection.remove(error._id);
+  }, 3000);
+});
+~~~
+<%= caption "packages/tmeasday:errors/errors_list.js" %>
+
+### Testing the package out with Microscope
+
+We will now test things locally with Microscope to ensure our changed code works. To link the package into our project, we run `meteor add tmeasday:errors`. Then, we need to delete the existing files that have been made redundant by the new package:
+
+~~~bash
+rm client/helpers/errors.js
+rm client/templates/includes/errors.html
+rm client/templates/includes/errors.js
+~~~
+<%= caption "removing old files on the bash console" %>
+
+One other thing we need to do is to make some minor updates to use the correct API:
+
+~~~html
+  {{> header}}
+  {{> meteorErrors}}
+~~~
+<%= caption "client/templates/application/layout.html" %>
+
+~~~js
+//...
+
+Meteor.call('postInsert', post, function(error, result) {
+  // display the error to the user and abort
+  if (error)
+    return Errors.throw(error.reason);
+  
+  // show this result but route anyway
+  if (result.postExists)
+    Errors.throw('This link has already been posted');
+  
+  Router.go('postPage', {_id: result._id});  
+});
+
+//...
+~~~
+<%= caption "client/templates/posts/post_submit.js" %>
+<%= highlight "6, 10" %>
+
+~~~js
+//...
+
+Posts.update(currentPostId, {$set: postProperties}, function(error) {
+  if (error) {
+    // display the error to the user
+    Errors.throw(error.reason);
+  } else {
+    Router.go('postPage', {_id: currentPostId});
+  }
+});
+
+//...
+~~~
+<%= caption "client/templates/posts/post_edit.js" %>
+<%= highlight "6" %>
+
+<%= scommit "9-5-1", "Created basic errors package and linked it in." %>
+
+Once these changes have been made, we should get our original pre-package behaviour back.
+
+### Writing Tests
+
+The first step in developing a package is testing it against an application, but the next is to write a test suite that properly tests the package's behaviour. Meteor itself comes with Tinytest (a built in package tester), which makes it easy to run such tests and maintain peace of mind when sharing our package with others.
+
+Let's create a test file that uses Tinytest to run some tests against the errors codebase:
+
+~~~js
+Tinytest.add("Errors - collection", function(test) {
+  test.equal(Errors.collection.find({}).count(), 0);
+  
+  Errors.throw('A new error!');
+  test.equal(Errors.collection.find({}).count(), 1);
+  
+  Errors.collection.remove({});
+});
+
+Tinytest.addAsync("Errors - template", function(test, done) {  
+  Errors.throw('A new error!');
+  test.equal(Errors.collection.find({}).count(), 1);
+  
+  // render the template
+  Blaze.insert(Blaze.render(Template.meteorErrors), document.body);
+  
+  Meteor.setTimeout(function() {
+    test.equal(Errors.collection.find({}).count(), 0);
+    done();
+  }, 3500);
+});
+~~~
+<%= caption "packages/tmeasday:errors/errors_tests.js" %>
+
+In these tests we're checking the basic `Meteor.Errors` functions work, as well as double checking that the `onRendered` code in the template is still functioning.
+
+We won't cover the specifics of writing Meteor package tests here (as the API is not yet finalized and highly in flux), but hopefully it's fairly self explanatory how it works.
+
+To tell Meteor how to run the tests in `package.js`, use the following code:
+
+~~~js
+Package.onTest(function(api) {
+  api.use('tmeasday:errors', 'client');
+  api.use(['templating', 'tinytest', 'test-helpers'], 'client');  
+  
+  api.addFiles('errors_tests.js', 'client');
+});
+~~~
+<%= caption "packages/tmeasday:errors/package.js" %>
+
+<%= scommit "9-5-2", "Added tests to the package." %>
+
+Then we can run the tests with:
+
+~~~bash
+meteor test-packages tmeasday:errors
+~~~
+<%= caption "Terminal" %>
+
+<%= screenshot "s7-1", "Passing all tests" %>
+
+### Releasing the package
+
+Now, we want to release the package and make it available to the world. We do this by pushing it to Meteor's package server, and getting it onto Atmopshere.
+
+Luckily, it's very easy. We just `cd` into the package's directory, and run `meteor publish --create`:
+
+~~~bash
+cd packages/tmeasday:errors
+meteor publish --create
+~~~
+<%= caption "Terminal" %>
+
+Now that the package is released, we can now delete it from the project and then add it back in directly:
+
+~~~bash
+rm -r packages/errors
+meteor add tmeasday:errors
+~~~
+<%= caption "Terminal (run from the top level of the app)" %>
+
+<%= scommit "9-5-4", "Removed package from development tree." %>
+
+Now we should see Meteor download our package for the very first time. Well done!
+
+As usual with sidebar chapters, make sure you revert your changes before moving on (or else be sure to account for them when following along the rest of the book).

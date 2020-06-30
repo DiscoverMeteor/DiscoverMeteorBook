@@ -1,0 +1,24 @@
+// Susy Next Syntax
+// ================
+
+$susy-version: 2.1;
+
+@import "{}/client/scss/imports/susy/susy/su";
+@import "{}/client/scss/imports/susy/susy/output/float";
+
+@import "{}/client/scss/imports/susy/susy/language/susy/settings";
+@import "{}/client/scss/imports/susy/susy/language/susy/validation";
+@import "{}/client/scss/imports/susy/susy/language/susy/grids";
+@import "{}/client/scss/imports/susy/susy/language/susy/box-sizing";
+@import "{}/client/scss/imports/susy/susy/language/susy/context";
+@import "{}/client/scss/imports/susy/susy/language/susy/background";
+@import "{}/client/scss/imports/susy/susy/language/susy/container";
+@import "{}/client/scss/imports/susy/susy/language/susy/span";
+@import "{}/client/scss/imports/susy/susy/language/susy/gutters";
+@import "{}/client/scss/imports/susy/susy/language/susy/isolate";
+@import "{}/client/scss/imports/susy/susy/language/susy/gallery";
+@import "{}/client/scss/imports/susy/susy/language/susy/rows";
+@import "{}/client/scss/imports/susy/susy/language/susy/margins";
+@import "{}/client/scss/imports/susy/susy/language/susy/padding";
+@import "{}/client/scss/imports/susy/susy/language/susy/bleed";
+@import "{}/client/scss/imports/susy/susy/language/susy/breakpoint-plugin";

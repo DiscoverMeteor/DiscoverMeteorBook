@@ -1,0 +1,5 @@
+<div className="sidebars">
+  <Comments {...props}/>
+  <ChaptersTOC {...props}/>
+  <Vocabulary vocabularyChapter={props.vocabularyChapter}/>
+</div>

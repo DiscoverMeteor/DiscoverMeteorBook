@@ -1,0 +1,81 @@
+// at 47.5em (16*50=800px) switch to a 12-column layout
+$small-break: 50em;
+$medium-break: 62.5em;
+
+@mixin small(){
+  @media screen and (max-width: $small-break) {
+    @content;
+  }
+}
+@mixin smallish(){
+  @media screen and (max-width: 56em) {
+    @content;
+  }
+}
+@mixin medium(){
+  @media screen and (min-width: $small-break) {
+    @content;
+  }
+}
+@mixin large(){
+  @media screen and (min-width: $medium-break) {
+    @content;
+  }
+}
+
+
+$total-columns  : 12;
+$column-width   : 35px;
+$gutter-width   : 40px;
+$grid-padding   : 0px;
+
+$susy: (
+  columns: $total-columns,
+  gutters: $gutter-width / $column-width,
+  column-width: $column-width
+);
+
+.layout{
+  position: relative;
+  @include animate();
+}
+
+.row{
+	@include container(12);
+	padding:0 20px;
+	position:relative;
+	@include animate();
+}
+
+@include small{
+	body{
+		overflow-x:hidden;
+	}
+}
+@include medium{
+	section{
+		@include container;
+		padding:0;
+	}
+	.mailinglist{
+		width:760px;
+		.book{
+			display:block;
+		}
+		.form{
+			@include prefix(1);
+			@include span(3);
+		}
+		.share{
+			@include span(1 omega);
+		}
+	}
+	.bottom .form{
+		@include prefix(0);
+		@include span(4 omega)
+	}
+	.about{
+		@include span(3);
+	}
+
+}

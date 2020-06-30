@@ -1,0 +1,13 @@
+figure{
+  img{
+    width:100%;
+    display:block;
+  }
+  figcaption{
+    font-style:italic;
+    font-size:16px;
+    color:$light-text;
+    @extend .secondary-font;
+    text-align: center;
+  }
+}

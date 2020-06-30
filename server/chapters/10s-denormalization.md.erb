@@ -1,0 +1,53 @@
+---
+title: Denormalization
+slug: denormalization
+date: 0010/01/02
+number: 10.5
+level: book
+sidebar: true
+photoUrl: http://www.flickr.com/photos/ikewinski/9283093547/
+photoAuthor: Mike Lewinski
+contents: Understand what denormalization is.|Compare Mongo with traditional relational databases.|Learn when you should *not* denormalize your data. 
+paragraphs: 15
+---
+
+Denormalizing data means not storing that data in a "normal" form. In other words, denormalization means having multiple copies of the same piece of data hanging about. 
+
+In the last chapter, we denormalized the count of the number of comments into the post object to avoid having to load all the comments all the time. In a data modelling sense this is redundant, as we could instead just count the correct set of comments at any time to figure out that value (leaving out performance considerations).
+
+Denormalizing often means extra work for the developer. In our example, every time we add or remove a comment we'll also need to remember to update the relevant post to ensure that the `commentsCount` field stays accurate. This is exactly why relational databases such as MySQL frown upon this approach.
+
+However, the normal approach also has its drawbacks: without a `commentsCount` property, we'd need to send _all_ comments down the wire at all times just to be able to count them, which is what we were doing in the beginning. Denormalizing lets us avoid this entirely.
+
+<% note do %>
+
+### A Special Publication
+
+It *would* be possible to create a special publication that only sends down the comment counts that we are interested in (i.e. comment counts of posts that we can currently see, via aggregate queries on the server). 
+
+But it's worth considering if the complexity of such publication code would not outweigh the difficulties created by denormalizing…
+
+<% end %>
+
+Of course, such considerations are application-specific: if you are writing code where data integrity is of paramount importance, then avoiding data inconsistencies is far more important and of a higher priority to you than performance gains.
+
+### Embedding Documents or Using Multiple Collections
+
+If you are experienced with Mongo, you might have been surprised to see that we created a second collection just for comments: why not just embed the comments in a list within the post document?
+
+It turns out that many of the tools Meteor gives us work a lot better when operating at the collection level. For example:
+
+1. The `{{#each}}` helper is very efficient when iterating over a cursor (the result of `collection.find()`). The same is not true when it iterates over an array of objects within a larger document.
+2. `allow` and `deny` operate at the document level, and thus make it easy to ensure that any modifications of individual comments are correct in a way that would be more complex if we operated at a post level.
+3. DDP operates at the level of top-level attributes of a document--this would mean if `comments` was a property of a `post`, every time a comment was created on a post, the server would send the entire updated comment list of that post out to each connected client.
+4. Publications and subscriptions are a lot easier to control at the level of documents. For example, if we wanted to paginate comments on a post we would find it difficult to do so unless comments were in their own collection.
+
+Mongo suggests embedding documents in order to reduce the number of expensive queries to fetch documents. However, this is less of an issue when we take into account Meteor's architecture: most of the time we are querying comments on the *client*, where database access is essentially free.
+
+<% note do %>
+
+### The Downsides of Denormalization
+
+There's a good argument to be made that you *shouldn't* denormalize your data. For a good look at the case against denormalization, we recommend [Why You Should Never Use MongoDB](http://www.sarahmei.com/blog/2013/11/11/why-you-should-never-use-mongodb/) by Sarah Mei.
+
+<% end %>

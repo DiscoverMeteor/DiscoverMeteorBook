@@ -1,0 +1,423 @@
+---
+title: Getting Started
+slug: getting-started
+date: 0002/01/01
+number: 2
+level: free
+photoUrl: http://www.flickr.com/photos/ikewinski/9511230392/
+photoAuthor: Mike Lewinski
+contents: Install Meteor.|Learn about the 5 types of Meteor packages.|Setup the file structure of your Meteor app.
+paragraphs: 49
+---
+
+First impressions are important, and Meteor's install process should be relatively painless. In most cases, you'll be up and running in less than five minutes.
+
+To begin with, if you're on Mac OS or Linux you can install Meteor by opening a terminal window and typing:
+
+~~~bash
+curl https://install.meteor.com | sh
+~~~
+
+If you're running Windows, refer to the [install instructions](https://www.meteor.com/install) on the Meteor site. 
+
+This will install the `meteor` executable onto your system and have you ready to use Meteor.
+
+<% note do %>
+
+### *Not* Installing Meteor
+
+If you can't (or don't want to) install Meteor locally, we recommend checking out [Nitrous.io](http://nitrous.io).
+
+Nitrous.io is a service that lets you run apps and edit their code right in your browser, and we've written [a short guide](https://www.discovermeteor.com/blog/meteor-nitrous) to help you get set up.
+
+You can simply follow that guide up to (and including) the "Installing Meteor" section, and then follow along with the book again starting from the "Creating a Simple App" section of this chapter.
+
+<% end %>
+
+### Creating a Simple App
+
+Now that we have installed Meteor, let's create an app. To do this, we use Meteor's command line tool `meteor`:
+
+~~~bash
+meteor create microscope
+~~~
+
+This command will download Meteor, and set up a basic, ready to use Meteor project for you. When it's done, you should see a directory, `microscope/`, containing the following directories and files:
+
+~~~bash
+.meteor
+client
+| main.css
+| main.html
+| main.js
+server
+| main.js
+.gitignore
+package.json
+~~~
+
+The app that Meteor has created for you is a simple boilerplate application demonstrating a few simple patterns.
+
+Even though our app doesn't do much, we can still run it. To run the app, go back to your terminal and type:
+
+~~~bash
+cd microscope
+meteor
+~~~
+
+Now point your browser to `http://localhost:3000/` (or the equivalent `http://0.0.0.0:3000/`) and you should see something like this:
+
+<%= screenshot "2-1", "Meteor's Hello World." %>
+
+<%= commit "2-1", "Created basic microscope project." %>
+
+Congratulations! You've got your first Meteor app running. By the way, to stop the app all you need to do is bring up the terminal tab where the app is running, and press `ctrl+c`.
+
+Also note that if you're using Git, this is a good time to initialize your repo with `git init`.
+
+<% note do %>
+
+### Bye Bye Meteorite
+
+There was a time where Meteor relied on an external package manager called Meteorite. Since Meteor version 0.9.0, Meteorite is not needed anymore since its features have been assimilated into Meteor itself.
+
+So if you encounter any references to Meteorite's `mrt` command line utility while browsing Meteor-related material, you can safely replace them by the usual `meteor`.
+
+<% end %>
+
+### Adding a Package
+
+We will now use Meteor's package system to add the [Bootstrap](http://getbootstrap.com/) framework to our project.
+
+This is no different from adding Bootstrap the usual way by manually including its CSS and JavaScript files, except that we rely on the package maintainer to keep everything up to date for us.
+
+The `bootstrap` package is maintained by the `twbs` user, which gives us the full name of the package, `twbs:bootstrap`. 
+
+~~~bash
+meteor add twbs:bootstrap
+~~~
+
+Note that we're adding Bootstrap **3**. Some of the screenshots in this book were taken with an older version of Microscope running Bootstrap **2**, which means they might look slightly different.
+
+We'll also add the [Session](http://docs.meteor.com/#/full/session) package, which will come in handy later:
+
+~~~bash
+meteor add session
+~~~
+
+Although Session is a first-party Meteor package, it's not enabled by default in new Meteor apps so we need to add it manually. 
+
+This is a good time to check which packages we're running. It turns out that in addition to the one we just added, Meteor also comes with a few packages enabled out of the box. You can see the list by opening the `packages` file inside the hidden `.meteor` directory: 
+
+```
+# Meteor packages used by this project, one per line.
+# Check this file (and the other files in this directory) into your repository.
+#
+# 'meteor add' and 'meteor remove' will edit this file for you,
+# but you can also edit it by hand.
+
+meteor-base             # Packages every Meteor app needs to have
+mobile-experience       # Packages for a great mobile UX
+mongo                   # The database Meteor supports right now
+blaze-html-templates    # Compile .html files into Meteor Blaze views
+reactive-var            # Reactive variable for tracker
+jquery                  # Helpful client-side library
+tracker                 # Meteor's client-side reactive programming library
+
+standard-minifier-css   # CSS minifier run for production mode
+standard-minifier-js    # JS minifier run for production mode
+es5-shim                # ECMAScript 5 compatibility for older browsers.
+ecmascript              # Enable ECMAScript2015+ syntax in app code
+
+autopublish             # Publish all data to the clients (for prototyping)
+insecure                # Allow all DB writes from clients (for prototyping)
+
+session
+twbs:bootstrap
+```
+
+This might seem a bit overwhelming, but you don't need to worry about every single package right now. Just verify that our `twbs:bootstrap` package was successfully added at the end of your package list. 
+
+Also, note that unlike `twbs:bootstrap`, the other packages don't have an `author:` part in their name, signaling the fact that these are official, core Meteor packages. 
+
+<%= commit "2-2", "Added bootstrap package." %>
+
+As soon as you've added the Bootstrap package you should notice a change in our bare-bones app:
+
+<%= screenshot "2-1b", "With Bootstrap." %>
+
+Unlike the “traditional” way of including external assets, we haven't had to link up any CSS or JavaScript files, because Meteor takes care of all that for us! That's just one of the many advantages of Meteor packages.
+
+### NPM Packages
+
+While we're on the subject of packages, you'll notice we also have a `package.json` file in our repository:
+
+~~~js
+{
+  "name": "microscope",
+  "private": true,
+  "scripts": {
+    "start": "meteor run"
+  },
+  "dependencies": {
+    "meteor-node-stubs": "~0.2.0"
+  }
+}
+~~~
+
+This file is used to tell NPM (Node's package manager) what to do, just like the `.meteor/packages` file tells Meteor which packages to run. One key difference between both packages system though is that unlike Meteor, NPM doesn't automatically parse an app's `package.json` file. So you'll have to do it manually every time you add or remove an NPM package. 
+
+Let's do it right now with: 
+
+~~~bash
+npm install
+~~~
+
+<% note do %>
+
+### A Note on Packages
+
+When speaking about packages in the context of Meteor, it pays to be specific. Meteor uses five basic types of packages:
+
+- The `meteor-base` package stands alone: it contains **Meteor's core components**, and a Meteor app can't run without it. 
+- **First-party packages** come bundled with Meteor. Some, such as `mongo` or `session`, are included with new Meteor apps by default but can be removed if you don't need them, while others (such as `check` or `http`) need to be added explicitly.
+- **Local packages** are specific to your app, and live in its local `/packages` directory. 
+- **Atmosphere packages** are custom, third-party packages that have been published to [Atmosphere](http://atmosphere.meteor.com), Meteor's online package repository. They all follow the `author:package` naming convention. 
+- Finally, **NPM packages** are Node.js packages. They can't be included in your Meteor package list, but instead are listed in your app's `package.json` file. 
+
+<% end %>
+
+### The File Structure of a Meteor App
+
+Before we begin coding, we must set up our project properly. To ensure we have a clean build, open up the `client` and `server` directory and delete the contents of `client/main.html`, `client/main.js`. Then go ahead and delete `server/main.js` entirely.
+
+Next, create two new root directories inside `/microscope`: `/public`, and `/lib`.
+
+Don't worry if all this breaks the app for now, we'll start filling in these files in the next chapter.
+
+We should mention that some of these directories are special. When it comes to running code, Meteor has a few rules:
+
+- Code in the `/server` directory only runs on the server.
+- Code in the `/client` directory only runs on the client.
+- Everything else runs on both the client and server.
+- Your static assets (fonts, images, etc.) go in the `/public` directory.
+
+And it's also useful to know how Meteor decides in which order to load your files:
+
+- Files in `/lib` are loaded *before* anything else.
+- Any `main.*` file is loaded *after* everything else.
+- Everything else loads in alphabetical order based on the file name.
+
+Note that although Meteor has these rules, it doesn't really force you to use any predefined file structure for your app if you don't want to. So the structure we suggest is just our way of doing things, not a rule set in stone.
+
+We encourage you to check out the [official Meteor docs](http://docs.meteor.com/#structuringyourapp) if you want more details on this.
+
+<% note do %>
+
+### Is Meteor MVC?
+
+If you're coming to Meteor from other frameworks such as Ruby on Rails, you might be wondering if Meteor apps adopt the MVC (Model View Controller) pattern.
+
+The short answer is no. Unlike Rails, Meteor doesn't impose any predefined structure to your app. So in this book we'll simply lay out code in the way that makes the most sense to us, without worrying too much about acronyms.
+
+<% end %>
+
+### No public?
+
+OK, we lied. We don't actually need the `public/` directory for the simple reason that Microscope doesn't use any static assets! But, since most other Meteor apps are going to include at least a couple images, we thought it was important to cover it too.
+
+By the way, you might also notice a hidden `.meteor` directory. This is where Meteor stores its own code, and modifying  things in there is usually a very bad idea. In fact, you don't really ever need to look in this directory at all. The only exceptions to this are the `.meteor/packages` and `.meteor/release` files, which are respectively used to list your smart packages and the version of Meteor to use. When you add packages and change Meteor releases, it can be helpful to check the changes to these files.
+
+<% note do %>
+
+### Underscores vs CamelCase
+
+The only thing we'll say about the age-old underscore (`my_variable`) vs camelCase (`myVariable`) debate is that it doesn't really matter which one you pick as long as you stick to it.
+
+In this book, we're using camelCase because it's the usual JavaScript way of doing things (after all, it's JavaScript, not java_script!).
+
+The only exceptions to this rule are file names, which will use underscores (`my_file.js`), and CSS classes, which use hyphens (`.my-class`). The reason for this is that in the filesystem, underscores are most common, while the CSS syntax itself already uses hyphens (`font-family`, `text-align`, etc.).
+
+<% end %>
+
+### Taking Care of CSS
+
+This book is not about CSS. So to avoid slowing you down with styling details, we've decided to make the whole stylesheet available from the start, so you don't need to worry about it ever again.
+
+CSS automatically gets loaded and minified by Meteor, so unlike other static assets it goes into `/client`, not `/public`. Go ahead and create a `client/stylesheets/` directory now, and put this `style.css` file inside it:
+
+~~~css
+.grid-block, .main, .post, .comments li, .comment-form {
+  background: #fff;
+  border-radius: 3px;
+  padding: 10px;
+  margin-bottom: 10px;
+  -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
+  -moz-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.15); }
+
+body {
+  background: #eee;
+  color: #666666; }
+
+#main {
+  position: relative;
+}
+.page {
+  position: absolute;
+  top: 0px;
+  width: 100%;
+}
+
+.navbar {
+  margin-bottom: 10px; }
+  /* line 32, ../sass/style.scss */
+  .navbar .navbar-inner {
+    border-radius: 0px 0px 3px 3px; }
+
+#spinner {
+  height: 300px; }
+
+.post {
+  /* For modern browsers */
+  /* For IE 6/7 (trigger hasLayout) */
+  *zoom: 1;
+  position: relative;
+  opacity: 1; }
+  .post:before, .post:after {
+    content: "";
+    display: table; }
+  .post:after {
+    clear: both; }
+  .post.invisible {
+    opacity: 0; }
+  .post.instant {
+    -webkit-transition: none;
+    -moz-transition: none;
+    -o-transition: none;
+    transition: none; }
+  .post.animate{
+    -webkit-transition: all 300ms 0ms;
+    -moz-transition: all 300ms 0ms ease-in;
+    -o-transition: all 300ms 0ms ease-in;
+    transition: all 300ms 0ms ease-in; }
+  .post .upvote {
+    display: block;
+    margin: 7px 12px 0 0;
+    float: left; }
+  .post .post-content {
+    float: left; }
+    .post .post-content h3 {
+      margin: 0;
+      line-height: 1.4;
+      font-size: 18px; }
+      .post .post-content h3 a {
+        display: inline-block;
+        margin-right: 5px; }
+      .post .post-content h3 span {
+        font-weight: normal;
+        font-size: 14px;
+        display: inline-block;
+        color: #aaaaaa; }
+    .post .post-content p {
+      margin: 0; }
+  .post .discuss {
+    display: block;
+    float: right;
+    margin-top: 7px; }
+
+.comments {
+  list-style-type: none;
+  margin: 0; }
+  .comments li h4 {
+    font-size: 16px;
+    margin: 0; }
+    .comments li h4 .date {
+      font-size: 12px;
+      font-weight: normal; }
+    .comments li h4 a {
+      font-size: 12px; }
+  .comments li p:last-child {
+    margin-bottom: 0; }
+
+.dropdown-menu span {
+  display: block;
+  padding: 3px 20px;
+  clear: both;
+  line-height: 20px;
+  color: #bbb;
+  white-space: nowrap; }
+
+.load-more {
+  display: block;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.05);
+  text-align: center;
+  height: 60px;
+  line-height: 60px;
+  margin-bottom: 10px; }
+  .load-more:hover {
+    text-decoration: none;
+    background: rgba(0, 0, 0, 0.1); }
+
+.posts .spinner-container{
+  position: relative;
+  height: 100px;
+}
+
+.jumbotron{
+  text-align: center;
+}
+.jumbotron h2{
+  font-size: 60px;
+  font-weight: 100;
+}
+
+@-webkit-keyframes fadeOut {
+  0% {opacity: 0;}
+  10% {opacity: 1;}
+  90% {opacity: 1;}
+  100% {opacity: 0;}
+}
+
+@keyframes fadeOut {
+  0% {opacity: 0;}
+  10% {opacity: 1;}
+  90% {opacity: 1;}
+  100% {opacity: 0;}
+}
+
+.errors{
+  position: fixed;
+  z-index: 10000;
+  padding: 10px;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  pointer-events: none;
+}
+.alert {
+          animation: fadeOut 2700ms ease-in 0s 1 forwards;
+  -webkit-animation: fadeOut 2700ms ease-in 0s 1 forwards;
+     -moz-animation: fadeOut 2700ms ease-in 0s 1 forwards;
+  width: 250px;
+  float: right;
+  clear: both;
+  margin-bottom: 5px;
+  pointer-events: auto;
+}
+~~~
+<%= caption "client/main.css" %>
+
+<%= commit "2-3","Re-arranged file structure." %>
+
+<% note do %>
+
+### A Note on CoffeeScript
+
+In this book we'll be writing in pure JavaScript. But if you prefer CoffeeScript, Meteor has you covered. Simply add the CoffeeScript package and you'll be good to go:
+
+`meteor add coffeescript`
+
+<% end %>

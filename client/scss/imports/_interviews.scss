@@ -1,0 +1,34 @@
+.interview{
+  h2{
+    text-align:center;
+    border-bottom: none;
+  }
+  @include medium{
+    padding:0 50px;
+  }
+  p{
+    font-size:18px;
+    line-height:1.8;
+  }
+  .note{
+    p{
+      margin:0;
+      text-align:center;
+    }
+    margin-bottom:40px;
+  }
+  .portrait{
+    height:160px;
+    width:160px;
+    @include medium{
+      float:left;
+      margin:0 40px 40px -80px;
+    }
+    img{
+      border-radius: 400px;
+    }
+    figcaption{
+      text-align:center;
+    }
+  }
+}

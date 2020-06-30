@@ -1,0 +1,1 @@
+Mixpanel = Npm.require('mixpanel');
