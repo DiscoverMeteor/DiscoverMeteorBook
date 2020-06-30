@@ -12,3 +12,7 @@ node_modules
 
 settings.json
 dumps
+
+.idea
+.vscode
+.atom
