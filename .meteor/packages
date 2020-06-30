@@ -11,7 +11,7 @@ accounts-meteor-developer
 standard-app-packages
 email
 service-configuration
-meteor-developer
+# meteor-developer
 accounts-oauth
 oauth
 http
@@ -59,7 +59,7 @@ billing
 # CSS Stuff
 seba:minifiers-autoprefixer
 meta:susy
-fourseven:scss
+fourseven:scss@4.12.0!
 force-ssl
 
 
@@ -72,3 +72,4 @@ jsx
 react-template-helper
 
 utilities:meteor-griddle
+# static-html

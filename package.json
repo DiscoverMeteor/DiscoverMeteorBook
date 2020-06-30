@@ -1,11 +1,14 @@
 {
-  "devDependencies": {
+  "dependencies": {
+    "@babel/runtime": "^7.10.4",
+    "bcrypt": "^5.0.0",
     "body-parser": "^1.19.0",
     "griddle-react": "^0.3.1",
-    "react": "0.14.x",
-    "react-disqus-thread": "0.3.1",
-    "react-dom": "^0.14.7",
-    "react-mounter": "^1.0.0",
-    "underscore": ">= 1.6.x"
+    "meteor-node-stubs": "^1.0.0",
+    "react": "^16.13.1",
+    "react-disqus-thread": "^0.3.1",
+    "react-dom": "^16.13.1",
+    "react-mounter": "^1.2.0",
+    "underscore": "^1.10.2"
   }
 }
