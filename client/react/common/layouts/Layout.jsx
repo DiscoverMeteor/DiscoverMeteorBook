@@ -1,4 +1,6 @@
-Layout = React.createClass({
+import createReactClass from 'create-react-class';
+
+Layout = createReactClass({
   
   render() {
     return (

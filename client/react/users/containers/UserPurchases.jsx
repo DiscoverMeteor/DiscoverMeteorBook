@@ -1,10 +1,12 @@
-import Griddle from "griddle-react";
+//import Griddle from "griddle-react";
+import createReactClass from 'create-react-class';
+import PropTypes from 'prop-types';
 
-UserPurchases = React.createClass({
+UserPurchases = createReactClass({
 
   propTypes: {
-    userId: React.PropTypes.string.isRequired,
-    showTableHeading: React.PropTypes.bool
+    userId: PropTypes.string.isRequired,
+    showTableHeading: PropTypes.bool
   },
 
   mixins: [ReactMeteorData],
@@ -40,6 +42,7 @@ UserPurchases = React.createClass({
     ];
 
     return (
+      {/*
       <Griddle
         tableClassName="table"
         results={this.data.purchases}
@@ -48,6 +51,7 @@ UserPurchases = React.createClass({
         showPager={false}
         showTableHeading={showTableHeading}
       />
+      */}
     )
   }
 

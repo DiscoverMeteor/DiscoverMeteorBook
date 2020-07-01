@@ -1,4 +1,6 @@
-Upgrade = React.createClass({
+import createReactClass from 'create-react-class';
+
+Upgrade = createReactClass({
   
   mixins: [ReactMeteorData],
   

@@ -1,7 +1,10 @@
-ChapterPage = React.createClass({
+import createReactClass from 'create-react-class';
+import PropTypes from 'prop-types';
+
+ChapterPage = createReactClass({
   
   propTypes: {
-    slug: React.PropTypes.string.isRequired
+    slug: PropTypes.string.isRequired
   },
 
   mixins: [ReactMeteorData],

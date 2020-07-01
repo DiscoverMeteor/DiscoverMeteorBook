@@ -1,4 +1,6 @@
-MeteorLoginForm = React.createClass({
+import createReactClass from 'create-react-class';
+
+MeteorLoginForm = createReactClass({
 
   handleSubmit(event) {
     event.preventDefault();

@@ -1,7 +1,10 @@
-AdminPurchasePage = React.createClass({
+import createReactClass from 'create-react-class';
+import PropTypes from 'prop-types';
+
+AdminPurchasePage = createReactClass({
 
   propTypes: {
-    purchaseId: React.PropTypes.string.isRequired
+    purchaseId: PropTypes.string.isRequired
   },
 
   mixins: [ReactMeteorData],

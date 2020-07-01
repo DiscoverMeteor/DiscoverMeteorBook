@@ -1,4 +1,6 @@
-Username = React.createClass({
+import createReactClass from 'create-react-class';
+
+Username = createReactClass({
   render: function(){
     var user = Meteor.users._transform(this.props.rowData);
     return <span>{user.getUsername()}</span>

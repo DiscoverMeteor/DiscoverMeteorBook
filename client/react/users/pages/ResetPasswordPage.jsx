@@ -1,4 +1,6 @@
-ResetPasswordPage = React.createClass({
+import createReactClass from 'create-react-class';
+
+ResetPasswordPage = createReactClass({
   
   resetPassword(event) {
     event.preventDefault();

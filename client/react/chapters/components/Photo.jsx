@@ -1,14 +1,17 @@
+import createReactClass from 'create-react-class';
+import PropTypes from 'prop-types';
+
 var timeout;
 
 $.easing.easeOutQuad = function (x, t, b, c, d) {
   return -c *(t/=d)*(t-2) + b;
 }
 
-Photo = React.createClass({
+Photo = createReactClass({
     
   propTypes: {
-    chapter: React.PropTypes.object.isRequired,
-    chapters: React.PropTypes.array.isRequired
+    chapter: PropTypes.object.isRequired,
+    chapters: PropTypes.array.isRequired
   },
 
   prevChapter() {

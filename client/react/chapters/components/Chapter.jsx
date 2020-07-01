@@ -1,7 +1,10 @@
-Chapter = React.createClass({
+import createReactClass from 'create-react-class';
+import PropTypes from 'prop-types';
+
+Chapter = createReactClass({
   
   propTypes: {
-    chapter: React.PropTypes.object.isRequired
+    chapter: PropTypes.object.isRequired
   },
 
   getChapterContent() {

@@ -1,11 +1,14 @@
-Purchase = React.createClass({
+import createReactClass from 'create-react-class';
+import PropTypes from 'prop-types';
+
+Purchase = createReactClass({
 
   propTypes: {
-    product: React.PropTypes.object.isRequired,
-    level: React.PropTypes.object.isRequired,
-    user: React.PropTypes.object, // if a user is provided, then we know this is an upgrade
-    key: React.PropTypes.number,
-    code: React.PropTypes.string,
+    product: PropTypes.object.isRequired,
+    level: PropTypes.object.isRequired,
+    user: PropTypes.object, // if a user is provided, then we know this is an upgrade
+    key: PropTypes.number,
+    code: PropTypes.string,
   },
 
   renderPrice(levelKey, index) {

@@ -1,4 +1,6 @@
-ChangelogPage = React.createClass({
+import createReactClass from 'create-react-class';
+
+ChangelogPage = createReactClass({
   
   mixins: [ReactMeteorData],
   

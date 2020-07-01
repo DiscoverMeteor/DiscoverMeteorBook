@@ -1,4 +1,6 @@
-App = React.createClass({
+import createReactClass from 'create-react-class';
+
+App = createReactClass({
 
   mixins: [ReactMeteorData],
   

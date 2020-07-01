@@ -1,8 +1,11 @@
-Flash = React.createClass({
+import createReactClass from 'create-react-class';
+import PropTypes from 'prop-types';
+
+Flash = createReactClass({
   
   propTypes: {
-    message: React.PropTypes.string,
-    type: React.PropTypes.string
+    message: PropTypes.string,
+    type: PropTypes.string
   },
 
   mixins: [ReactMeteorData],

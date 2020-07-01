@@ -1,3 +1,6 @@
+import createReactClass from 'create-react-class';
+import PropTypes from 'prop-types';
+
 var getVerb = function (chapterNumber) {
   // pick a verb to introduce a bit of diversity in the prompt.
   // early chapters have more normal verbs, and it gets more crazy at the end.
@@ -8,10 +11,10 @@ var getVerb = function (chapterNumber) {
   return verbs[vindex];
 };
 
-ShareProgress = React.createClass({
+ShareProgress = createReactClass({
 
   propTypes: {
-    chapter: React.PropTypes.object.isRequired
+    chapter: PropTypes.object.isRequired
   },
 
   verb() {

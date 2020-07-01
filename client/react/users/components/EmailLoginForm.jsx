@@ -1,4 +1,6 @@
-EmailLoginForm = React.createClass({
+import createReactClass from 'create-react-class';
+
+EmailLoginForm = createReactClass({
 
   handleSubmit(event) {
     event.preventDefault();

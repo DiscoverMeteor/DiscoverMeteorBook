@@ -1,4 +1,6 @@
-FormLayout = React.createClass({
+import createReactClass from 'create-react-class';
+
+FormLayout = createReactClass({
 
   mixins: [ReactMeteorData],
   

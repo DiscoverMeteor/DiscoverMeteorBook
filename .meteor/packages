@@ -71,5 +71,5 @@ react-meteor-data
 jsx
 react-template-helper
 
-utilities:meteor-griddle
+# utilities:meteor-griddle
 # static-html

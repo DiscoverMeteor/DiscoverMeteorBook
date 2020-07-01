@@ -1,4 +1,6 @@
-InterviewPage = React.createClass({
+import createReactClass from 'create-react-class';
+
+InterviewPage = createReactClass({
   
   mixins: [ReactMeteorData],
   

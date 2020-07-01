@@ -1,7 +1,10 @@
-Vocabulary = React.createClass({
+import createReactClass from 'create-react-class';
+import PropTypes from 'prop-types';
+
+Vocabulary = createReactClass({
 
   propTypes: {
-    vocabularyChapter: React.PropTypes.object.isRequired
+    vocabularyChapter: PropTypes.object.isRequired
   },
 
   getVocabulary() {
