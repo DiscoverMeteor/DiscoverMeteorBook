@@ -1,6 +1,6 @@
 import Griddle from "griddle-react";
 
-UserPurchases = React.createClass({
+UserPurchases = createReactClass({
 
   propTypes: {
     userId: React.PropTypes.string.isRequired,

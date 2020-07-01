@@ -1,4 +1,4 @@
-ChaptersTOC = React.createClass({
+ChaptersTOC = createReactClass({
 
   propTypes: {
     chapter: React.PropTypes.object.isRequired,

@@ -1,4 +1,4 @@
-Vocabulary = React.createClass({
+Vocabulary = createReactClass({
 
   propTypes: {
     vocabularyChapter: React.PropTypes.object.isRequired

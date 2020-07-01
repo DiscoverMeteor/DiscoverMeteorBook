@@ -1,4 +1,4 @@
-AdminPurchasesPage = React.createClass({
+AdminPurchasesPage = createReactClass({
 
   render() {
 

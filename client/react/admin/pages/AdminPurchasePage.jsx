@@ -1,4 +1,4 @@
-AdminPurchasePage = React.createClass({
+AdminPurchasePage = createReactClass({
 
   propTypes: {
     purchaseId: React.PropTypes.string.isRequired

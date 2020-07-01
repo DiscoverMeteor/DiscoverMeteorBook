@@ -1,4 +1,4 @@
-AdminLayout = React.createClass({
+AdminLayout = createReactClass({
 
   mixins: [ReactMeteorData],
 

@@ -1,4 +1,4 @@
-LoginPage = React.createClass({
+LoginPage = createReactClass({
 
   render() {
     return (

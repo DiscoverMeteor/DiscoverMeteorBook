@@ -1,4 +1,4 @@
-Video = React.createClass({
+Video = createReactClass({
 
   propTypes: {
     video: React.PropTypes.object.isRequired

@@ -1,4 +1,4 @@
-Purchase = React.createClass({
+Purchase = createReactClass({
 
   propTypes: {
     product: React.PropTypes.object.isRequired,

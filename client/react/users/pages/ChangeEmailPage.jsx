@@ -1,4 +1,4 @@
-ChangeEmailPage = React.createClass({
+ChangeEmailPage = createReactClass({
     
   mixins: [ReactMeteorData],
   

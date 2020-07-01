@@ -1,4 +1,4 @@
-VideoPage = React.createClass({
+VideoPage = createReactClass({
   
   mixins: [ReactMeteorData],
   

@@ -1,4 +1,4 @@
-ChapterLayout = React.createClass({
+ChapterLayout = createReactClass({
   
   propTypes: {
     chapter: React.PropTypes.object.isRequired,

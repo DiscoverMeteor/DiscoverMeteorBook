@@ -1,4 +1,4 @@
-ResetPasswordPage = React.createClass({
+ResetPasswordPage = createReactClass({
   
   resetPassword(event) {
     event.preventDefault();

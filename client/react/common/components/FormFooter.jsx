@@ -1,4 +1,4 @@
-FormFooter = React.createClass({
+FormFooter = createReactClass({
   
   render() {
     return (

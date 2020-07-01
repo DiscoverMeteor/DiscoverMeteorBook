@@ -1,4 +1,4 @@
-Chapter = React.createClass({
+Chapter = createReactClass({
   
   propTypes: {
     chapter: React.PropTypes.object.isRequired

@@ -1,4 +1,4 @@
-UserId = React.createClass({
+UserId = createReactClass({
   render() {
     return (
       <a href={FlowRouter.path("profilePage", this.props.rowData)}>{this.props.rowData._id}</a>

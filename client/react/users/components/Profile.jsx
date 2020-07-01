@@ -1,4 +1,4 @@
-Profile = React.createClass({
+Profile = createReactClass({
 
   propTypes: {
     user: React.PropTypes.object.isRequired,

@@ -1,4 +1,4 @@
-StarterPage = React.createClass({
+StarterPage = createReactClass({
   
   mixins: [ReactMeteorData],
   

@@ -1,4 +1,4 @@
-AdminUsersPage = React.createClass({
+AdminUsersPage = createReactClass({
 
   render() {
 

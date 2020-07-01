@@ -1,4 +1,4 @@
-PhotoBackground = React.createClass({
+PhotoBackground = createReactClass({
   
   propTypes: {
     chapter: React.PropTypes.object.isRequired

@@ -1,4 +1,4 @@
-Layout = React.createClass({
+Layout = createReactClass({
   
   render() {
     return (

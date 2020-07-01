@@ -1,4 +1,4 @@
-Enrolled = React.createClass({
+Enrolled = createReactClass({
   render: function(){
     var user = Meteor.users._transform(this.props.rowData);
     if (user.enrollMethod() === "pending") {

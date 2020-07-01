@@ -1,4 +1,4 @@
-HomePage = React.createClass({
+HomePage = createReactClass({
 
   mixins: [ReactMeteorData],
   

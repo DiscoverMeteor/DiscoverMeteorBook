@@ -1,4 +1,4 @@
-FinishSignupPage = React.createClass({
+FinishSignupPage = createReactClass({
   
   getInitialState() {
     return {

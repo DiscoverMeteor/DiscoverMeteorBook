@@ -2,7 +2,7 @@ var ReactDisqusThread = require('react-disqus-thread');
 
 var disqus_shortname = 'themeteorbook'; // required: replace example with your forum shortname
 
-Comments = React.createClass({
+Comments = createReactClass({
 
   propTypes: {
     chapter: React.PropTypes.object.isRequired,

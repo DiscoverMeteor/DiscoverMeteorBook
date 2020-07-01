@@ -1,4 +1,4 @@
-FormWrapper = React.createClass({
+FormWrapper = createReactClass({
 
   render() {
     return (

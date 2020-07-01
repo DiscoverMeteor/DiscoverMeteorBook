@@ -8,7 +8,7 @@ var getVerb = function (chapterNumber) {
   return verbs[vindex];
 };
 
-ShareProgress = React.createClass({
+ShareProgress = createReactClass({
 
   propTypes: {
     chapter: React.PropTypes.object.isRequired

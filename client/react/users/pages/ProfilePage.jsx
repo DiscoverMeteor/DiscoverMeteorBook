@@ -1,4 +1,4 @@
-ProfilePage = React.createClass({
+ProfilePage = createReactClass({
 
   propTypes: {
     _id: React.PropTypes.string // user ID

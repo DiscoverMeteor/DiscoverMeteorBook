@@ -1,4 +1,4 @@
-Flash = React.createClass({
+Flash = createReactClass({
   
   propTypes: {
     message: React.PropTypes.string,

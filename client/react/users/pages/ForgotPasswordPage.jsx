@@ -1,4 +1,4 @@
-ForgotPasswordPage = React.createClass({
+ForgotPasswordPage = createReactClass({
   
   handleSubmit(event) {
     event.preventDefault();

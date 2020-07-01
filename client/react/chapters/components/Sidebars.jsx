@@ -1,4 +1,4 @@
-Sidebars = React.createClass({
+Sidebars = createReactClass({
   
   propTypes: {
     chapter: React.PropTypes.object.isRequired,

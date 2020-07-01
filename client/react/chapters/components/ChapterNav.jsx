@@ -1,4 +1,4 @@
-ChapterNav = React.createClass({
+ChapterNav = createReactClass({
   
   propTypes: {
     chapter: React.PropTypes.object.isRequired

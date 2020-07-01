@@ -1,4 +1,4 @@
-ChapterPage = React.createClass({
+ChapterPage = createReactClass({
   
   propTypes: {
     slug: React.PropTypes.string.isRequired

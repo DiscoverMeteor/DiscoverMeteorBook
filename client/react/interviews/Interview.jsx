@@ -1,4 +1,4 @@
-Interview = React.createClass({
+Interview = createReactClass({
 
   propTypes: {
     interview: React.PropTypes.object.isRequired
