@@ -1,7 +1,10 @@
+import createReactClass from 'create-react-class';
+import PropTypes from 'prop-types';
+
 ProfilePage = createReactClass({
 
   propTypes: {
-    _id: React.PropTypes.string // user ID
+    _id: PropTypes.string // user ID
   },
 
   mixins: [ReactMeteorData],

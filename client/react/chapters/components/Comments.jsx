@@ -1,13 +1,15 @@
-var ReactDisqusThread = require('react-disqus-thread');
+import createReactClass from 'create-react-class';
+import PropTypes from 'prop-types';
+//var ReactDisqusThread = require('react-disqus-thread');
 
 var disqus_shortname = 'themeteorbook'; // required: replace example with your forum shortname
 
 Comments = createReactClass({
 
   propTypes: {
-    chapter: React.PropTypes.object.isRequired,
-    chapters: React.PropTypes.array.isRequired,
-    vocabularyChapter: React.PropTypes.object
+    chapter: PropTypes.object.isRequired,
+    chapters: PropTypes.array.isRequired,
+    vocabularyChapter: PropTypes.object
   },
 
   handleToggleClick(event) {
@@ -27,12 +29,14 @@ Comments = createReactClass({
             <hr/>
             <p>Additionally, you can use this area for more general discussion and questions:</p>
           </div>
+          {/*
           <ReactDisqusThread
             shortname={disqus_shortname}
             identifier={this.props.chapter.slug}
             title={this.props.chapter.title}
             url={Meteor.absoluteUrl() + 'chapters/' + this.props.chapter.slug}
           />
+          */}
         </div>
       </div>
     );

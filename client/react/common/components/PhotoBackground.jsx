@@ -1,7 +1,10 @@
+import createReactClass from 'create-react-class';
+import PropTypes from 'prop-types';
+
 PhotoBackground = createReactClass({
   
   propTypes: {
-    chapter: React.PropTypes.object.isRequired
+    chapter: PropTypes.object.isRequired
   },
 
   componentDidMount() {

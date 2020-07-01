@@ -1,3 +1,5 @@
+import createReactClass from 'create-react-class';
+
 LoginPage = createReactClass({
 
   render() {

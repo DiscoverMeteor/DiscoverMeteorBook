@@ -3,6 +3,6 @@ import React from 'react';
 window.React = React;
 
 //We need this npm package to replace React.createReactClass
-import createReactClass from 'create-react-class';
+//import createReactClass from 'create-react-class';
 
-console.log("react.js file was loaded 🎉", createReactClass);
+//console.log("react.js file was loaded 🎉", createReactClass);

@@ -1,3 +1,5 @@
+import createReactClass from 'create-react-class';
+
 PurchaseId = createReactClass({
   render() {
     return (

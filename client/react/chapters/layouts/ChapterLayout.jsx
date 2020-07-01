@@ -1,9 +1,12 @@
+import createReactClass from 'create-react-class';
+import PropTypes from 'prop-types';
+
 ChapterLayout = createReactClass({
   
   propTypes: {
-    chapter: React.PropTypes.object.isRequired,
-    chapters: React.PropTypes.array.isRequired,
-    vocabularyChapter: React.PropTypes.object
+    chapter: PropTypes.object.isRequired,
+    chapters: PropTypes.array.isRequired,
+    vocabularyChapter: PropTypes.object
   },
   
   render() {

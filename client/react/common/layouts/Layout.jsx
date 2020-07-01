@@ -1,3 +1,5 @@
+import createReactClass from 'create-react-class';
+
 Layout = createReactClass({
   
   render() {

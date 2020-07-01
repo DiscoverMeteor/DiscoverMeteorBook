@@ -1,3 +1,5 @@
+import createReactClass from 'create-react-class';
+
 HomePage = createReactClass({
 
   mixins: [ReactMeteorData],

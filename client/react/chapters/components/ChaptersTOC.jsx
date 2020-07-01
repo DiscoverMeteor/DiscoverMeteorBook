@@ -1,8 +1,11 @@
+import createReactClass from 'create-react-class';
+import PropTypes from 'prop-types';
+
 ChaptersTOC = createReactClass({
 
   propTypes: {
-    chapter: React.PropTypes.object.isRequired,
-    chapters: React.PropTypes.array.isRequired
+    chapter: PropTypes.object.isRequired,
+    chapters: PropTypes.array.isRequired
   },
   
   renderChapter(chapter, index) {

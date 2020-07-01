@@ -1,7 +1,10 @@
+import createReactClass from 'create-react-class';
+import PropTypes from 'prop-types';
+
 Video = createReactClass({
 
   propTypes: {
-    video: React.PropTypes.object.isRequired
+    video: PropTypes.object.isRequired
   },
 
   getDescription() {

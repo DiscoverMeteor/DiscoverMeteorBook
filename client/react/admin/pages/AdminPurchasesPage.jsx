@@ -1,3 +1,5 @@
+import createReactClass from 'create-react-class';
+
 AdminPurchasesPage = createReactClass({
 
   render() {
@@ -35,6 +37,7 @@ AdminPurchasesPage = createReactClass({
 
     return (
       <AdminLayout>
+        {/*
         <MeteorGriddle
           publication="adminPurchases"
           collection={Purchases}
@@ -48,6 +51,7 @@ AdminPurchasesPage = createReactClass({
           externalSortColumn="createdAt"
           externalSortAscending={false}
         />
+        */}
       </AdminLayout>
     )
 

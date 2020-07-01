@@ -1,7 +1,10 @@
+import createReactClass from 'create-react-class';
+import PropTypes from 'prop-types';
+
 Interview = createReactClass({
 
   propTypes: {
-    interview: React.PropTypes.object.isRequired
+    interview: PropTypes.object.isRequired
   },
 
   render() {

@@ -1,10 +1,13 @@
+import createReactClass from 'create-react-class';
+import PropTypes from 'prop-types';
+
 Profile = createReactClass({
 
   propTypes: {
-    user: React.PropTypes.object.isRequired,
-    currentUser: React.PropTypes.object.isRequired,
-    product: React.PropTypes.object,
-    purchases: React.PropTypes.array
+    user: PropTypes.object.isRequired,
+    currentUser: PropTypes.object.isRequired,
+    product: PropTypes.object,
+    purchases: PropTypes.array
   },
 
   isCurrentUserProfile() {
